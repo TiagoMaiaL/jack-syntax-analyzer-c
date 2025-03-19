@@ -9,8 +9,10 @@ fi
 cd $artifacts
 rm -rf ./*
 
-# TODO: Add source files to be compiled
-source_files=()
+source_files=(
+    '../src/main.c'
+)
+
 files=("${source_files[@]}")
 
 args=""
