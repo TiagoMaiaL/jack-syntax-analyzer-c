@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "file-handler.h"
 
 #define SUCCESS_CODE    0
 #define ERROR_CODE      -1
@@ -12,9 +13,19 @@ int main(int argc, char **argv)
         return ERROR_CODE;
     }
 
-    char *source_file = argv[1];
+    FILE *file_handle;
+    const char *source_file_path = argv[1];
 
-    // TODO: Add module to open source file with read permissions.
+    file_handle = file_open(source_file_path);
+
+    if (file_handle == NULL) {
+        printf(
+            "File %s couldn't be opened.\n", 
+            source_file_path
+        );
+        return ERROR_CODE;
+    }
+
     // TODO: Add module to tokenize opened file.
 
     return SUCCESS_CODE;

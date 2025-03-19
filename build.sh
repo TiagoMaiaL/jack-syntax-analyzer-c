@@ -11,6 +11,7 @@ rm -rf ./*
 
 source_files=(
     '../src/main.c'
+    '../src/file-handler.c'
 )
 
 files=("${source_files[@]}")
