@@ -4,7 +4,7 @@ A Jack syntax analyzer written in C, for the Nand2Tetris course.
 
 ## TODOS
 
-- [ ] Add shell script to build project
+- [x] Add shell script to build project
 - [ ] Parse arguments
 - [ ] Add module to read jack file
 - [ ] Add module to tokenize source code
