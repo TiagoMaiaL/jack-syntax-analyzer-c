@@ -49,12 +49,12 @@ typedef enum {
 
 typedef enum {
     KEYWORD,
-    // TODO: define how to identify each symbol.
     SYMBOL,
     // Sequence of letters, digits, and underscores
     IDENTIFIER,
     // Either an int or string constant.
     CONSTANT
+    // TODO: Add error type indicating failure in tokenization
 } Tokenizer_atom_type;
 
 typedef struct {
