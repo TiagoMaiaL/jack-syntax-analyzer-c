@@ -12,6 +12,7 @@ rm -rf ./*
 source_files=(
     '../src/main.c'
     '../src/file-handler.c'
+    '../src/tokenizer.c'
 )
 
 files=("${source_files[@]}")

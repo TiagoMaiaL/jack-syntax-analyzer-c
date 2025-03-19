@@ -1,4 +1,4 @@
-#include <bool.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 typedef enum {
@@ -26,6 +26,28 @@ typedef enum {
 } Tokenizer_keyword;
 
 typedef enum {
+    L_CURLY,
+    R_CURLY,
+    L_PAREN,
+    R_PAREN,
+    L_BRACK,
+    R_BRACK,
+    DOT,
+    COMMA,
+    SEMICOLON,
+    PLUS,
+    MINUS,
+    ASTERISK,
+    SLASH,
+    AMPERSAND,
+    VERT_BAR,
+    LESS_TH,
+    GREATER_TH,
+    EQUAL,
+    NOT
+} Tokenizer_symbol;
+
+typedef enum {
     KEYWORD,
     // TODO: define how to identify each symbol.
     SYMBOL,
@@ -41,6 +63,6 @@ typedef struct {
 } Tokenizer_atom;
 
 int tokenizer_start(FILE *handle);
-token_atom tokenizer_next();
+Tokenizer_atom tokenizer_next();
 bool tokenizer_finished();
 
