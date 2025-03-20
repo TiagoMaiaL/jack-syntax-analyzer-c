@@ -1,4 +1,14 @@
+#include <stdlib.h>
 #include "tokenizer.h"
+
+typedef enum {
+    TK_IN_COMMENT,
+    TK_IN_IDENTIFIER,
+    TK_IN_CONSTANT,
+    TK_DEFAULT,
+    TK_FINISHED,
+    TK_ERROR
+} TKState;
 
 static const char *keyword_strings[] = {
     "class",
@@ -46,70 +56,50 @@ static const char symbol_chars[] = {
     '~'
 };
 
-typedef enum {
-    IN_COMMENT,
-    IN_IDENTIFIER,
-    IN_CONSTANT
-    DEFAULT
-    FINISHED
-    ERROR
-} State;
-
-static State state;
-
 static FILE *source;
+static TKState state;
 
-int tokenizer_start(FILE *handle)
+static char get_char();
+static char *get_word();
+static Tokenizer_symbol get_symbol(char ch);
+static Tokenizer_atom make_empty_atom();
+
+void tokenizer_start(FILE *handle)
 {
-    if (source == NULL)
-        return -1; // TODO: Extract codes
-                   // Into their own file.
-
     source = handle;
-    state = DEFAULT;
 
-    return 0;
-}
-
-static char get_char()
-{
-    char ch = fgetch(source);
-
-    if (ch == EOF) {
-        if (ferror(source) == 0) {
-            state = FINISHED;
-        } else {
-            state = ERROR;
-        }
+    if (source == NULL) {
+        state = TK_ERROR;
+    } else {
+        state = TK_DEFAULT;
     }
-
-    return ch;
-}
-
-static char *get_word()
-{
-    return "";
 }
 
 Tokenizer_atom tokenizer_next()
 {
-    if (state == FINISHED) { 
-        // TODO: return null atom.
+    if (state == TK_FINISHED) { 
+        return make_empty_atom();
     }
 
-    if (state == ERROR) {
+    if (state == TK_ERROR) {
         // TODO: return null atom with error type.
     }
 
     Tokenizer_atom atom;
     char next_char;
 
+    atom = make_empty_atom();
     next_char = get_char();
 
-    if (state == DEFAULT || state == FINISHED) {
-        if (is_symbol(next_char)) {
-            // If it's a symbol, return it right away.
-            // TODO: Initialize atom.
+    if (state == TK_DEFAULT || state == TK_FINISHED) {
+        if (get_symbol(next_char) != TK_SYMBOL_UNDEFINED) {
+            char *value = malloc(sizeof(char) * 2);
+            value[0] = next_char;
+            value[1] = '\0';
+
+            atom.value = value;
+            atom.type = TK_TYPE_SYMBOL;
+            atom.symbol = get_symbol(next_char);
             
         } else {
             // Get word, check if it's a keyword, identifier or constant.
@@ -122,6 +112,47 @@ Tokenizer_atom tokenizer_next()
 
 bool tokenizer_finished()
 {
-    return STATE == FINISHED;
+    return state == TK_FINISHED;
+}
+
+static char get_char()
+{
+    printf("State = %d\n", state);
+
+    char ch = fgetc(source);
+
+    if (ch == EOF) {
+        if (ferror(source) == 0) {
+            state = TK_FINISHED;
+        } else {
+            state = TK_ERROR;
+        }
+    }
+
+    return ch;
+}
+
+static char *get_word()
+{
+    return "";
+}
+
+static Tokenizer_symbol get_symbol(char ch) {
+    for (int i = 0; i < TK_SYMBOLS_COUNT; i++) {
+        if (ch == symbol_chars[i]) {
+            return i;
+        }
+    }
+    return TK_SYMBOL_UNDEFINED;
+}
+
+static Tokenizer_atom make_empty_atom()
+{
+    Tokenizer_atom atom;
+    atom.value = NULL;
+    atom.type = TK_TYPE_UNDEFINED;
+    atom.symbol = TK_SYMBOL_UNDEFINED;
+    atom.keyword = TK_KEYWORD_UNDEFINED;
+    return atom;
 }
 
