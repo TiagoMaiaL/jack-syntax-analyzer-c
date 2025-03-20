@@ -102,6 +102,7 @@ Tokenizer_atom tokenizer_next()
             atom.symbol = get_symbol(next_char);
             
         } else {
+            // TODO: tokenize comments as well.
             // Get word, check if it's a keyword, identifier or constant.
             // TODO: initialize atom.
         }
