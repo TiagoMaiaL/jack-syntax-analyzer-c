@@ -118,8 +118,6 @@ bool tokenizer_finished()
 
 static char get_char()
 {
-    printf("State = %d\n", state);
-
     char ch = fgetc(source);
 
     if (ch == EOF) {
