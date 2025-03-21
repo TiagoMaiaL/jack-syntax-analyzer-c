@@ -37,12 +37,42 @@ static void test_tokenizing_symbols()
     prepare_test_file("{]};.");
     tokenizer_start(test_file_handle); 
 
+    tst_false(tokenizer_finished());
+
     Tokenizer_atom atom = tokenizer_next();
-    
+ 
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(atom.symbol == TK_SYMBOL_L_CURLY);
     tst_true(atom.value[0] == '{');
     free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.symbol == TK_SYMBOL_R_BRACK);
+    tst_true(atom.value[0] == ']');
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.symbol == TK_SYMBOL_R_CURLY);
+    tst_true(atom.value[0] == '}');
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.symbol == TK_SYMBOL_SEMICOLON);
+    tst_true(atom.value[0] == ';');
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.symbol == TK_SYMBOL_DOT);
+    tst_true(atom.value[0] == '.');
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.symbol == TK_SYMBOL_UNDEFINED);
+    tst_true(atom.keyword == TK_KEYWORD_UNDEFINED);
+    tst_true(atom.type == TK_TYPE_UNDEFINED);
+    tst_true(atom.value == NULL);
+
+    tst_true(tokenizer_finished());
 
     erase_test_file();
 }
