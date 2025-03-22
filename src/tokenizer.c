@@ -63,6 +63,11 @@ static char get_char();
 static char *get_word();
 static Tokenizer_symbol get_symbol(char ch);
 static Tokenizer_atom make_empty_atom();
+static void tokenize_symbol(Tokenizer_atom *atom, char ch);
+static void tokenize_comment(Tokenizer_atom *atom);
+static void tokenize_identifier(Tokenizer_atom *atom);
+static void tokenize_int_literal(Tokenizer_atom *atom);
+static void tokenize_str_literal(Tokenizer_atom *atom);
 
 void tokenizer_start(FILE *handle)
 {
@@ -77,32 +82,31 @@ void tokenizer_start(FILE *handle)
 
 Tokenizer_atom tokenizer_next()
 {
-    if (state == TK_FINISHED) { 
-        return make_empty_atom();
-    }
+    Tokenizer_atom atom = make_empty_atom();
 
     if (state == TK_ERROR) {
-        // TODO: return null atom with error type.
+        atom.type = TK_TYPE_ERROR;
+        return atom;
     }
 
-    Tokenizer_atom atom;
-    char next_char;
+    char next_char = get_char();
 
-    atom = make_empty_atom();
-    next_char = get_char();
+    if (state == TK_FINISHED) {
+        return atom;
+    }
 
-    if (state == TK_DEFAULT || state == TK_FINISHED) {
-        if (get_symbol(next_char) != TK_SYMBOL_UNDEFINED) {
-            char *value = malloc(sizeof(char) * 2);
-            value[0] = next_char;
-            value[1] = '\0';
+    if (state == TK_DEFAULT) {
+        Tokenizer_symbol symbol = get_symbol(next_char);
 
-            atom.value = value;
-            atom.type = TK_TYPE_SYMBOL;
-            atom.symbol = get_symbol(next_char);
-            
+        if (symbol != TK_SYMBOL_UNDEFINED) {
+            if (symbol == TK_SYMBOL_SLASH /* && (peak() == '/' || peak() == '*') */) {
+                // TODO: tokenize comments as well.
+
+            } else {
+                tokenize_symbol(&atom, next_char);
+            }
+                        
         } else {
-            // TODO: tokenize comments as well.
             // Get word, check if it's a keyword, identifier or constant.
             // TODO: initialize atom.
         }
@@ -116,8 +120,43 @@ bool tokenizer_finished()
     return state == TK_FINISHED;
 }
 
+static void tokenize_symbol(Tokenizer_atom *atom, char ch)
+{
+    char *value = malloc(sizeof(char) * 2);
+    value[0] = ch;
+    value[1] = '\0';
+
+    atom->value = value;
+    atom->type = TK_TYPE_SYMBOL;
+    atom->symbol = get_symbol(ch);
+}
+
+static void tokenize_comment(Tokenizer_atom *atom)
+{
+
+}
+
+static void tokenize_identifier(Tokenizer_atom *atom)
+{
+
+}
+
+static void tokenize_int_literal(Tokenizer_atom *atom)
+{
+
+}
+
+static void tokenize_str_literal(Tokenizer_atom *atom)
+{
+
+}
+
 static char get_char()
 {
+    if (state == TK_FINISHED) {
+        return EOF;
+    }
+
     char ch = fgetc(source);
 
     if (ch == EOF) {
