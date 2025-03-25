@@ -1,4 +1,6 @@
+#include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 #include "tokenizer.h"
 
 typedef enum {
@@ -10,7 +12,7 @@ typedef enum {
     TK_ERROR
 } TKState;
 
-static const char *keyword_strings[] = {
+static const char *keyword_strs[] = {
     "class",
     "constructor",
     "function",
@@ -59,18 +61,22 @@ static const char symbol_chars[] = {
 static FILE *source;
 static TKState state;
 
-static char get_char();
-static char peak();
-static char *get_word();
-static Tokenizer_symbol get_symbol(char ch);
-// TODO: Add method to get keyword from str.
-static Tokenizer_atom make_empty_atom();
 static void tokenize_symbol(Tokenizer_atom *atom, char ch);
-static bool is_comment_start(Tokenizer_symbol symbol);
+static Tokenizer_symbol get_symbol(char ch);
+
 static void tokenize_comment(Tokenizer_atom *atom);
+static bool is_comment_start(Tokenizer_symbol symbol);
+
+static void tokenize_keyword(Tokenizer_atom *atom);
+static Tokenizer_keyword get_keyword(char *val_ref);
+
 static void tokenize_identifier(Tokenizer_atom *atom);
 static void tokenize_int_literal(Tokenizer_atom *atom);
 static void tokenize_str_literal(Tokenizer_atom *atom);
+
+static char peak();
+static char get_char();
+static Tokenizer_atom make_empty_atom();
 
 void tokenizer_start(FILE *handle)
 {
@@ -108,8 +114,12 @@ Tokenizer_atom tokenizer_next()
                 tokenize_symbol(&atom, next_char);
             }
         } else {
-            // Get word, check if it's a keyword, identifier or constant.
-            // TODO: initialize atom.
+            if (get_keyword(NULL) != TK_KEYWORD_UNDEFINED) {
+                tokenize_keyword(&atom);
+            }
+            // TODO: Check for identifiers
+            // TODO: Check for int constants
+            // TODO: Check for str constants
         }
     } 
            
@@ -132,10 +142,13 @@ static void tokenize_symbol(Tokenizer_atom *atom, char ch)
     atom->symbol = get_symbol(ch);
 }
 
-static bool is_comment_start(Tokenizer_symbol symbol)
-{
-    char ch = peak();
-    return symbol == TK_SYMBOL_SLASH && (ch == '/' || ch == '*');
+static Tokenizer_symbol get_symbol(char ch) {
+    for (int i = 0; i < TK_SYMBOLS_COUNT; i++) {
+        if (ch == symbol_chars[i]) {
+            return i;
+        }
+    }
+    return TK_SYMBOL_UNDEFINED;
 }
 
 static void tokenize_comment(Tokenizer_atom *atom)
@@ -178,9 +191,60 @@ static void tokenize_comment(Tokenizer_atom *atom)
     atom->value = value;
 }
 
+static bool is_comment_start(Tokenizer_symbol symbol)
+{
+    char ch = peak();
+    return symbol == TK_SYMBOL_SLASH && (ch == '/' || ch == '*');
+}
+
+static void tokenize_keyword(Tokenizer_atom *atom)
+{
+    char *value = NULL;
+    Tokenizer_keyword keyword = get_keyword(value);
+
+    atom->type = TK_TYPE_KEYWORD;
+    atom->keyword = keyword;
+    atom->value = value;
+}
+
+static Tokenizer_keyword get_keyword(char *val_ref)
+{
+    fseek(source, -1, SEEK_CUR);
+    
+    int keyword_len = 0;
+    char ch = get_char();
+    char *keyword_value = NULL;
+
+    while (isalpha(ch)) {
+        keyword_len++;
+    }
+
+    fseek(source, -keyword_len, SEEK_CUR);
+
+    if (keyword_len == 0) {
+        return TK_KEYWORD_UNDEFINED;
+    }
+
+    keyword_value = malloc(sizeof(char) * (keyword_len + 1));
+    for (int i = 0; i < keyword_len; i++) {
+        keyword_value[i] = get_char();
+    }
+    keyword_value[keyword_len + 1] = '\0';
+
+    val_ref = keyword_value;
+
+    for (int i = 0; i < TK_KEYWORDS_COUNT; i++) {
+        if (strcmp(keyword_strs[i], keyword_value) == 0) {
+            return i;
+        }
+    }
+
+    return TK_KEYWORD_UNDEFINED;
+}
+
 static void tokenize_identifier(Tokenizer_atom *atom)
 {
-
+    
 }
 
 static void tokenize_int_literal(Tokenizer_atom *atom)
@@ -191,6 +255,21 @@ static void tokenize_int_literal(Tokenizer_atom *atom)
 static void tokenize_str_literal(Tokenizer_atom *atom)
 {
 
+}
+
+static char peak()
+{
+    if (state == TK_FINISHED) {
+        return EOF;
+    }
+
+    char ch = fgetc(source);
+
+    if (ch != EOF) {
+        fseek(source, -1, SEEK_CUR);
+    }
+
+    return ch;
 }
 
 static char get_char()
@@ -210,35 +289,6 @@ static char get_char()
     }
 
     return ch;
-}
-
-static char peak()
-{
-    if (state == TK_FINISHED) {
-        return EOF;
-    }
-
-    char ch = fgetc(source);
-
-    if (ch != EOF) {
-        fseek(source, -1, SEEK_CUR);
-    }
-
-    return ch;
-}
-
-static char *get_word()
-{
-    return "";
-}
-
-static Tokenizer_symbol get_symbol(char ch) {
-    for (int i = 0; i < TK_SYMBOLS_COUNT; i++) {
-        if (ch == symbol_chars[i]) {
-            return i;
-        }
-    }
-    return TK_SYMBOL_UNDEFINED;
 }
 
 static Tokenizer_atom make_empty_atom()
