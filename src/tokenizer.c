@@ -162,7 +162,13 @@ static void tokenize_comment(Tokenizer_atom *atom)
     }
 
     char *value = malloc(sizeof(char) * (comment_len + 1));
-    fseek(source, -comment_len, SEEK_CUR);
+
+    if (is_line_comment) {
+        fseek(source, -comment_len, SEEK_CUR);
+    } else {
+        fseek(source, -(comment_len - 1), SEEK_CUR);
+    }
+
     for (int i = 0; i < comment_len; i++) {
         value[i] = get_char();
     }

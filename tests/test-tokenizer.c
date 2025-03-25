@@ -100,13 +100,70 @@ static void test_tokenizing_str_literals()
 
 static void test_tokenizing_comments()
 {
-    prepare_test_file("// asdf asdf");
+    // one-line comment
+    prepare_test_file("// asdf asdf\n");
     tokenizer_start(test_file_handle); 
 
     Tokenizer_atom atom = tokenizer_next();
  
     tst_true(atom.type == TK_TYPE_COMMENT);
-    tst_true(strcpy(atom.value, "// asdf asdf"));
+    tst_true(strcmp(atom.value, "// asdf asdf\n") == 0);
+    free(atom.value);
+
+    // symbol + one-line comment + symbol
+    prepare_test_file(";// asdf asdf\n.");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_COMMENT);
+    tst_true(strcmp(atom.value, "// asdf asdf\n") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    free(atom.value);
+
+    // block comment (inline)
+    prepare_test_file("/* asdf */");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+
+    tst_true(atom.type == TK_TYPE_COMMENT);
+    tst_true(strcmp(atom.value, "/* asdf */") == 0);
+    free(atom.value);
+
+    // block comment (multi-line)
+    prepare_test_file("/* asdf\nasdf\nasdf */");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+
+    tst_true(atom.type == TK_TYPE_COMMENT);
+    tst_true(strcmp(atom.value, "/* asdf\nasdf\nasdf */") == 0);
+    free(atom.value);
+
+    printf("Reached first multiline\n");
+
+    // symbol + block comment + symbol
+    prepare_test_file("./* asdf\nasdf*//");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_COMMENT);
+    tst_true(strcmp(atom.value, "/* asdf\nasdf*/") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
     free(atom.value);
 }
 
