@@ -208,8 +208,16 @@ static char get_char()
 
 static char peak()
 {
+    if (state == TK_FINISHED) {
+        return EOF;
+    }
+
     char ch = fgetc(source);
-    fseek(source, -1, SEEK_CUR);
+
+    if (ch != EOF) {
+        fseek(source, -1, SEEK_CUR);
+    }
+
     return ch;
 }
 
