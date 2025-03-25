@@ -60,10 +60,13 @@ static FILE *source;
 static TKState state;
 
 static char get_char();
+static char peak();
 static char *get_word();
 static Tokenizer_symbol get_symbol(char ch);
+// TODO: Add method to get keyword from str.
 static Tokenizer_atom make_empty_atom();
 static void tokenize_symbol(Tokenizer_atom *atom, char ch);
+static bool is_comment_start(Tokenizer_symbol symbol)
 static void tokenize_comment(Tokenizer_atom *atom);
 static void tokenize_identifier(Tokenizer_atom *atom);
 static void tokenize_int_literal(Tokenizer_atom *atom);
@@ -99,13 +102,11 @@ Tokenizer_atom tokenizer_next()
         Tokenizer_symbol symbol = get_symbol(next_char);
 
         if (symbol != TK_SYMBOL_UNDEFINED) {
-            if (symbol == TK_SYMBOL_SLASH /* && (peak() == '/' || peak() == '*') */) {
-                // TODO: tokenize comments as well.
-
+            if (is_comment_start(symbol)) {
+                tokenize_comment(&atom)
             } else {
                 tokenize_symbol(&atom, next_char);
             }
-                        
         } else {
             // Get word, check if it's a keyword, identifier or constant.
             // TODO: initialize atom.
@@ -131,9 +132,44 @@ static void tokenize_symbol(Tokenizer_atom *atom, char ch)
     atom->symbol = get_symbol(ch);
 }
 
+static bool is_comment_start(Tokenizer_symbol symbol)
+{
+    char ch = peak();
+    return symbol == TK_SYMBOL_SLASH && (ch == '/' || ch == '*');
+}
+
 static void tokenize_comment(Tokenizer_atom *atom)
 {
+    char comment_ch;
+    bool is_line_comment;
+    int ch;
 
+    ch = get_char();
+    is_line_comment = ch == '/';
+    comment_len = 2; // / + (/ or *)
+
+    while ((ch = get_char()) != EOF) {
+        comment_len += 1;
+
+        if (is_line_comment && ch == '\n') {
+            break;
+        }
+
+        if (!is_line_comment && (ch == '*' && peak() == '/')) {
+            comment_len += 1; // account for peak().
+            break;
+        }
+    }
+
+    char *value = alloc(sizeof(char) * (comment_len + 1));
+    fseek(source, -comment_len, SEEK_CUR);
+    for (int i = 0; i < comment_len; i++) {
+        value[i] = get_char();
+    }
+    value[comment_len] = '\0';
+    
+    atom->type = TK_TYPE_COMMENT;
+    atom->value = value;
 }
 
 static void tokenize_identifier(Tokenizer_atom *atom)
@@ -167,6 +203,13 @@ static char get_char()
         }
     }
 
+    return ch;
+}
+
+static char peak()
+{
+    char ch = fgetc(source);
+    fseek(source, -1, SEEK_CUR);
     return ch;
 }
 

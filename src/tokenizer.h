@@ -55,6 +55,7 @@ typedef enum {
 typedef enum {
     TK_TYPE_SYMBOL,
     // Sequence of letters, digits, and underscores
+    TK_TYPE_COMMENT,
     TK_TYPE_KEYWORD,
     TK_TYPE_IDENTIFIER,
     // Either an int or string constant.
