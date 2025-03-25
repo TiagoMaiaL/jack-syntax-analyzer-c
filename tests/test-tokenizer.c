@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "test-tokenizer.h"
 #include "test.h"
 #include "../src/tokenizer.h"
@@ -99,7 +100,14 @@ static void test_tokenizing_str_literals()
 
 static void test_tokenizing_comments()
 {
+    prepare_test_file("// asdf asdf");
+    tokenizer_start(test_file_handle); 
 
+    Tokenizer_atom atom = tokenizer_next();
+ 
+    tst_true(atom.type == TK_TYPE_COMMENT);
+    tst_true(strcpy(atom.value, "// asdf asdf"));
+    free(atom.value);
 }
 
 static void prepare_test_file(const char *file_content)

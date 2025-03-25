@@ -66,7 +66,7 @@ static Tokenizer_symbol get_symbol(char ch);
 // TODO: Add method to get keyword from str.
 static Tokenizer_atom make_empty_atom();
 static void tokenize_symbol(Tokenizer_atom *atom, char ch);
-static bool is_comment_start(Tokenizer_symbol symbol)
+static bool is_comment_start(Tokenizer_symbol symbol);
 static void tokenize_comment(Tokenizer_atom *atom);
 static void tokenize_identifier(Tokenizer_atom *atom);
 static void tokenize_int_literal(Tokenizer_atom *atom);
@@ -103,7 +103,7 @@ Tokenizer_atom tokenizer_next()
 
         if (symbol != TK_SYMBOL_UNDEFINED) {
             if (is_comment_start(symbol)) {
-                tokenize_comment(&atom)
+                tokenize_comment(&atom);
             } else {
                 tokenize_symbol(&atom, next_char);
             }
@@ -140,9 +140,9 @@ static bool is_comment_start(Tokenizer_symbol symbol)
 
 static void tokenize_comment(Tokenizer_atom *atom)
 {
-    char comment_ch;
+    char ch;
     bool is_line_comment;
-    int ch;
+    int comment_len;
 
     ch = get_char();
     is_line_comment = ch == '/';
@@ -161,7 +161,7 @@ static void tokenize_comment(Tokenizer_atom *atom)
         }
     }
 
-    char *value = alloc(sizeof(char) * (comment_len + 1));
+    char *value = malloc(sizeof(char) * (comment_len + 1));
     fseek(source, -comment_len, SEEK_CUR);
     for (int i = 0; i < comment_len; i++) {
         value[i] = get_char();
