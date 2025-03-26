@@ -30,8 +30,6 @@ void test_tokenizer()
     tst_unit("Str literals", test_tokenizing_str_literals);
     tst_unit("Comments", test_tokenizing_comments);
 
-    erase_test_file();
-
     tst_suite_finish();
 }
 
@@ -76,6 +74,8 @@ static void test_tokenizing_symbols()
     tst_true(atom.value == NULL);
 
     tst_true(tokenizer_finished());
+
+    erase_test_file();
 }
 
 static void test_tokenizing_keywords()
@@ -109,11 +109,27 @@ static void test_tokenizing_keywords()
     tst_true(atom.symbol == TK_SYMBOL_DOT);
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(strcmp(atom.value, ".") == 0);
+
+    atom = tokenizer_next();
+    tst_true(tokenizer_finished());
+
+    erase_test_file();
 }
 
 static void test_tokenizing_identifiers()
 {
+    prepare_test_file("nullable");
+    tokenizer_start(test_file_handle); 
 
+    Tokenizer_atom atom = tokenizer_next();
+
+    tst_true(atom.type == TK_TYPE_IDENTIFIER);
+    tst_true(strcmp(atom.value, "nullable") == 0);
+
+    atom = tokenizer_next();
+    tst_true(tokenizer_finished());
+
+    erase_test_file();
 }
 
 static void test_tokenizing_int_literals()
@@ -192,7 +208,14 @@ static void test_tokenizing_comments()
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(strcmp(atom.value, "/") == 0);
     free(atom.value);
+    
+    atom = tokenizer_next();
+
+    tst_true(tokenizer_finished());
+
+    erase_test_file();
 }
 
 static void prepare_test_file(const char *file_content)

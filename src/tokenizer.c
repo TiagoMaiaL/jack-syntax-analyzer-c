@@ -67,7 +67,9 @@ static bool is_in_comment_start(char ch);
 static bool tokenize_keyword(Tokenizer_atom *atom);
 static Tokenizer_keyword get_keyword(char **val_ref);
 
-static void tokenize_identifier(Tokenizer_atom *atom);
+static bool tokenize_identifier(Tokenizer_atom *atom);
+static char *get_identifier();
+
 static void tokenize_int_literal(Tokenizer_atom *atom);
 static void tokenize_str_literal(Tokenizer_atom *atom);
 
@@ -108,7 +110,10 @@ Tokenizer_atom tokenizer_next()
         return atom;
     }
 
-    // TODO: Tokenize identifier
+    if (tokenize_identifier(&atom)) {
+        return atom;
+    }
+
     // TODO: Tokenize int constant
     // TODO: Tokenize str constant
     
@@ -122,17 +127,17 @@ bool tokenizer_finished()
 
 static bool tokenize_symbol(Tokenizer_atom *atom)
 {
-    char ch = get_char();
-
-    if (state == TK_FINISHED) {
-        return false;
-    }
-
     if (state == TK_ERROR) {
         atom->type = TK_TYPE_ERROR;
         return false;
     }
 
+    char ch = get_char();
+
+    if (state == TK_FINISHED) {
+        return false;
+    }
+   
     Tokenizer_symbol symbol = get_symbol(ch);
 
     if (symbol == TK_SYMBOL_UNDEFINED || is_in_comment_start(ch)) {
@@ -244,7 +249,7 @@ static bool tokenize_keyword(Tokenizer_atom *atom)
 
 static Tokenizer_keyword get_keyword(char **val_ref)
 {
-    if (state == TK_ERROR) {
+    if (state == TK_ERROR || state == TK_FINISHED) {
         return TK_KEYWORD_UNDEFINED;
     }
 
@@ -266,7 +271,6 @@ static Tokenizer_keyword get_keyword(char **val_ref)
 
     seek_back(keyword_len);
 
-    // TODO: Refactor using stdlib copy
     keyword_value = malloc(sizeof(char) * (keyword_len + 1));
     for (int i = 0; i < keyword_len; i++) {
         keyword_value[i] = get_char();
@@ -281,14 +285,62 @@ static Tokenizer_keyword get_keyword(char **val_ref)
         }
     }
 
-    // TODO: Seek back
+    seek_back(keyword_len);
 
     return TK_KEYWORD_UNDEFINED;
 }
 
-static void tokenize_identifier(Tokenizer_atom *atom)
+static bool tokenize_identifier(Tokenizer_atom *atom)
 {
-    
+    char *identifier = get_identifier();
+
+    if (identifier == NULL) {
+        return false;
+    }
+
+    atom->type = TK_TYPE_IDENTIFIER;
+    atom->value = identifier;
+
+    return true;
+}
+
+static char *get_identifier()
+{
+    if (state == TK_ERROR) {
+        return NULL;
+    }
+
+    char *value;
+    char ch;
+    int len;
+
+    value = NULL;
+    ch = get_char();
+
+    if (state == TK_FINISHED) {
+        return NULL;
+    }
+
+    if (!isalpha(ch) && ch != '_') {
+        seek_back(1);
+        return NULL;
+    }
+
+    len = 1;
+
+    while (isalnum(ch = get_char()) || ch == '_') {
+        len++;
+    }
+
+    seek_back(len);
+
+    value = malloc(sizeof(char) * (len + 1));
+    for (int i = 0; i < len; i++) {
+        value[i] = get_char();
+    }
+    value[len + 1] = '\0';
+
+    return value;
 }
 
 static void tokenize_int_literal(Tokenizer_atom *atom)
@@ -342,6 +394,11 @@ static void seek_back(int amount)
     }
 
     fseek(source, -amount, SEEK_CUR);
+
+    if (state == TK_FINISHED) {
+        state = TK_DEFAULT;
+    }
+
     state = TK_DEFAULT;
 }
 
