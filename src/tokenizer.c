@@ -4,9 +4,6 @@
 #include "tokenizer.h"
 
 typedef enum {
-    TK_IN_COMMENT,
-    TK_IN_IDENTIFIER,
-    TK_IN_CONSTANT,
     TK_DEFAULT,
     TK_FINISHED,
     TK_ERROR
@@ -209,16 +206,22 @@ static void tokenize_keyword(Tokenizer_atom *atom)
 
 static Tokenizer_keyword get_keyword(char *val_ref)
 {
+    if (state == TK_ERROR) {
+        return TK_KEYWORD_UNDEFINED;
+    }
+
+    state = TK_DEFAULT;
     fseek(source, -1, SEEK_CUR);
     
+    char ch;
     int keyword_len = 0;
-    char ch = get_char();
     char *keyword_value = NULL;
 
-    while (isalpha(ch)) {
+    while (isalpha(ch = get_char())) {
         keyword_len++;
     }
 
+    state = TK_DEFAULT;
     fseek(source, -keyword_len, SEEK_CUR);
 
     if (keyword_len == 0) {
