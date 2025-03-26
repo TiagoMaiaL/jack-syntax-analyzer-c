@@ -80,13 +80,11 @@ static void test_tokenizing_symbols()
 
 static void test_tokenizing_keywords()
 {
-    return;
     prepare_test_file("null");
     tokenizer_start(test_file_handle); 
 
     Tokenizer_atom atom = tokenizer_next();
-    printf("val = %s\n", atom.value);
-    printf("val.keyword = %d\n", atom.keyword);
+
     tst_true(atom.keyword == TK_KEYWORD_NULL_VAL);
     tst_true(atom.type == TK_TYPE_KEYWORD);
     tst_true(strcmp(atom.value, "null") == 0);
@@ -168,6 +166,8 @@ static void test_tokenizing_comments()
     tst_true(atom.type == TK_TYPE_COMMENT);
     tst_true(strcmp(atom.value, "/* asdf\nasdf*/") == 0);
     free(atom.value);
+
+    // TODO: Test behavior of unfinished block comment.
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);

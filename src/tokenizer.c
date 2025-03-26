@@ -65,7 +65,7 @@ static bool tokenize_comment(Tokenizer_atom *atom);
 static bool is_in_comment_start(char ch);
 
 static bool tokenize_keyword(Tokenizer_atom *atom);
-static Tokenizer_keyword get_keyword(char *val_ref);
+static Tokenizer_keyword get_keyword(char **val_ref);
 
 static void tokenize_identifier(Tokenizer_atom *atom);
 static void tokenize_int_literal(Tokenizer_atom *atom);
@@ -104,7 +104,10 @@ Tokenizer_atom tokenizer_next()
         return atom;
     }
 
-    // TODO: Tokenize keywords
+    if (tokenize_keyword(&atom)) {
+        return atom;
+    }
+
     // TODO: Tokenize identifier
     // TODO: Tokenize int constant
     // TODO: Tokenize str constant
@@ -226,7 +229,11 @@ static bool is_in_comment_start(char ch)
 static bool tokenize_keyword(Tokenizer_atom *atom)
 {
     char *value = NULL;
-    Tokenizer_keyword keyword = get_keyword(value);
+    Tokenizer_keyword keyword = get_keyword(&value);
+
+    if (keyword == TK_KEYWORD_UNDEFINED) {
+        return false;
+    }
 
     atom->type = TK_TYPE_KEYWORD;
     atom->keyword = keyword;
@@ -235,43 +242,42 @@ static bool tokenize_keyword(Tokenizer_atom *atom)
     return true;
 }
 
-static Tokenizer_keyword get_keyword(char *val_ref)
+static Tokenizer_keyword get_keyword(char **val_ref)
 {
     if (state == TK_ERROR) {
         return TK_KEYWORD_UNDEFINED;
     }
 
-    state = TK_DEFAULT;
-    fseek(source, -1, SEEK_CUR);
-    
     char ch;
     int keyword_len = 0;
     char *keyword_value = NULL;
 
-    while (isalpha(ch = get_char())) {
+    while ((ch = get_char()) != EOF && isalpha(ch)) {
         keyword_len++;
     }
-
-    state = TK_DEFAULT;
-    fseek(source, -keyword_len, SEEK_CUR);
 
     if (keyword_len == 0) {
         return TK_KEYWORD_UNDEFINED;
     }
 
+    seek_back(keyword_len);
+
+    // TODO: Refactor using stdlib copy
     keyword_value = malloc(sizeof(char) * (keyword_len + 1));
     for (int i = 0; i < keyword_len; i++) {
         keyword_value[i] = get_char();
     }
     keyword_value[keyword_len + 1] = '\0';
 
-    val_ref = keyword_value;
+    *val_ref = keyword_value;
 
     for (int i = 0; i < TK_KEYWORDS_COUNT; i++) {
         if (strcmp(keyword_strs[i], keyword_value) == 0) {
             return i;
         }
     }
+
+    // TODO: Seek back
 
     return TK_KEYWORD_UNDEFINED;
 }
