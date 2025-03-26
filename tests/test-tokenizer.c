@@ -88,6 +88,27 @@ static void test_tokenizing_keywords()
     tst_true(atom.keyword == TK_KEYWORD_NULL_VAL);
     tst_true(atom.type == TK_TYPE_KEYWORD);
     tst_true(strcmp(atom.value, "null") == 0);
+
+    prepare_test_file("int");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.keyword == TK_KEYWORD_INT);
+    tst_true(atom.type == TK_TYPE_KEYWORD);
+    tst_true(strcmp(atom.value, "int") == 0);
+
+    prepare_test_file("int.");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.keyword == TK_KEYWORD_INT);
+    tst_true(atom.type == TK_TYPE_KEYWORD);
+    tst_true(strcmp(atom.value, "int") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.symbol == TK_SYMBOL_DOT);
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(strcmp(atom.value, ".") == 0);
 }
 
 static void test_tokenizing_identifiers()

@@ -256,6 +256,10 @@ static Tokenizer_keyword get_keyword(char **val_ref)
         keyword_len++;
     }
 
+    if (ch != EOF && !isalpha(ch)) {
+        seek_back(1);
+    }
+
     if (keyword_len == 0) {
         return TK_KEYWORD_UNDEFINED;
     }
