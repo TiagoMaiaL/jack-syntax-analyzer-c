@@ -62,7 +62,7 @@ static bool tokenize_symbol(Tokenizer_atom *atom);
 static Tokenizer_symbol get_symbol(char ch);
 
 static bool tokenize_comment(Tokenizer_atom *atom);
-static bool is_comment_start(Tokenizer_symbol symbol);
+static bool is_in_comment_start(char ch);
 
 static bool tokenize_keyword(Tokenizer_atom *atom);
 static Tokenizer_keyword get_keyword(char *val_ref);
@@ -91,6 +91,7 @@ Tokenizer_atom tokenizer_next()
     Tokenizer_atom atom = make_empty_atom();
 
     if (state == TK_ERROR) {
+        printf("Error\n");
         atom.type = TK_TYPE_ERROR;
         return atom;
     }
@@ -99,9 +100,9 @@ Tokenizer_atom tokenizer_next()
         return atom;
     }
 
-    //if (tokenize_comment(&atom)) {
-    //    return atom;
-    //}
+    if (tokenize_comment(&atom)) {
+        return atom;
+    }
 
     // TODO: Tokenize keywords
     // TODO: Tokenize identifier
@@ -131,7 +132,7 @@ static bool tokenize_symbol(Tokenizer_atom *atom)
 
     Tokenizer_symbol symbol = get_symbol(ch);
 
-    if (symbol == TK_SYMBOL_UNDEFINED) {
+    if (symbol == TK_SYMBOL_UNDEFINED || is_in_comment_start(ch)) {
         fseek(source, -1, SEEK_CUR);
         state = TK_DEFAULT;
         return false;
@@ -159,20 +160,29 @@ static Tokenizer_symbol get_symbol(char ch) {
 
 static bool tokenize_comment(Tokenizer_atom *atom)
 {
-    if (state == TK_FINISHED) {
-        return true;
-    }
-
     char ch;
+    bool is_comment_start;
     bool is_line_comment;
     int comment_len;
 
     ch = get_char();
+
+    if (state == TK_FINISHED) {
+        return false;
+    }
     
     if (state == TK_ERROR) {
         atom->type = TK_TYPE_ERROR;
         return false;
     }
+
+    if (!is_in_comment_start(ch)) {
+        fseek(source, -1, SEEK_CUR);
+        state = TK_DEFAULT;
+        return false;
+    }
+
+    ch = get_char();
 
     is_line_comment = ch == '/';
     comment_len = 2; // / + (/ or *)
@@ -209,10 +219,10 @@ static bool tokenize_comment(Tokenizer_atom *atom)
     return true;
 }
 
-static bool is_comment_start(Tokenizer_symbol symbol)
+static bool is_in_comment_start(char ch)
 {
-    char ch = peak();
-    return symbol == TK_SYMBOL_SLASH && (ch == '/' || ch == '*');
+    char next_ch = peak();
+    return ch == '/' && (next_ch == '/' || next_ch == '*');
 }
 
 static bool tokenize_keyword(Tokenizer_atom *atom)
