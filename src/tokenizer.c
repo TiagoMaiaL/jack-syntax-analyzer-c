@@ -58,13 +58,13 @@ static const char symbol_chars[] = {
 static FILE *source;
 static TKState state;
 
-static void tokenize_symbol(Tokenizer_atom *atom, char ch);
+static bool tokenize_symbol(Tokenizer_atom *atom);
 static Tokenizer_symbol get_symbol(char ch);
 
-static void tokenize_comment(Tokenizer_atom *atom);
+static bool tokenize_comment(Tokenizer_atom *atom);
 static bool is_comment_start(Tokenizer_symbol symbol);
 
-static void tokenize_keyword(Tokenizer_atom *atom);
+static bool tokenize_keyword(Tokenizer_atom *atom);
 static Tokenizer_keyword get_keyword(char *val_ref);
 
 static void tokenize_identifier(Tokenizer_atom *atom);
@@ -95,31 +95,19 @@ Tokenizer_atom tokenizer_next()
         return atom;
     }
 
-    char next_char = get_char();
-
-    if (state == TK_FINISHED) {
+    if (tokenize_symbol(&atom)) {
         return atom;
     }
 
-    if (state == TK_DEFAULT) {
-        Tokenizer_symbol symbol = get_symbol(next_char);
+    //if (tokenize_comment(&atom)) {
+    //    return atom;
+    //}
 
-        if (symbol != TK_SYMBOL_UNDEFINED) {
-            if (is_comment_start(symbol)) {
-                tokenize_comment(&atom);
-            } else {
-                tokenize_symbol(&atom, next_char);
-            }
-        } else {
-            if (get_keyword(NULL) != TK_KEYWORD_UNDEFINED) {
-                tokenize_keyword(&atom);
-            }
-            // TODO: Check for identifiers
-            // TODO: Check for int constants
-            // TODO: Check for str constants
-        }
-    } 
-           
+    // TODO: Tokenize keywords
+    // TODO: Tokenize identifier
+    // TODO: Tokenize int constant
+    // TODO: Tokenize str constant
+    
     return atom;
 }
 
@@ -128,8 +116,27 @@ bool tokenizer_finished()
     return state == TK_FINISHED;
 }
 
-static void tokenize_symbol(Tokenizer_atom *atom, char ch)
+static bool tokenize_symbol(Tokenizer_atom *atom)
 {
+    char ch = get_char();
+
+    if (state == TK_FINISHED) {
+        return false;
+    }
+
+    if (state == TK_ERROR) {
+        atom->type = TK_TYPE_ERROR;
+        return false;
+    }
+
+    Tokenizer_symbol symbol = get_symbol(ch);
+
+    if (symbol == TK_SYMBOL_UNDEFINED) {
+        fseek(source, -1, SEEK_CUR);
+        state = TK_DEFAULT;
+        return false;
+    }
+
     char *value = malloc(sizeof(char) * 2);
     value[0] = ch;
     value[1] = '\0';
@@ -137,6 +144,8 @@ static void tokenize_symbol(Tokenizer_atom *atom, char ch)
     atom->value = value;
     atom->type = TK_TYPE_SYMBOL;
     atom->symbol = get_symbol(ch);
+
+    return true;
 }
 
 static Tokenizer_symbol get_symbol(char ch) {
@@ -148,13 +157,23 @@ static Tokenizer_symbol get_symbol(char ch) {
     return TK_SYMBOL_UNDEFINED;
 }
 
-static void tokenize_comment(Tokenizer_atom *atom)
+static bool tokenize_comment(Tokenizer_atom *atom)
 {
+    if (state == TK_FINISHED) {
+        return true;
+    }
+
     char ch;
     bool is_line_comment;
     int comment_len;
 
     ch = get_char();
+    
+    if (state == TK_ERROR) {
+        atom->type = TK_TYPE_ERROR;
+        return false;
+    }
+
     is_line_comment = ch == '/';
     comment_len = 2; // / + (/ or *)
 
@@ -186,6 +205,8 @@ static void tokenize_comment(Tokenizer_atom *atom)
     
     atom->type = TK_TYPE_COMMENT;
     atom->value = value;
+
+    return true;
 }
 
 static bool is_comment_start(Tokenizer_symbol symbol)
@@ -194,7 +215,7 @@ static bool is_comment_start(Tokenizer_symbol symbol)
     return symbol == TK_SYMBOL_SLASH && (ch == '/' || ch == '*');
 }
 
-static void tokenize_keyword(Tokenizer_atom *atom)
+static bool tokenize_keyword(Tokenizer_atom *atom)
 {
     char *value = NULL;
     Tokenizer_keyword keyword = get_keyword(value);
@@ -202,6 +223,8 @@ static void tokenize_keyword(Tokenizer_atom *atom)
     atom->type = TK_TYPE_KEYWORD;
     atom->keyword = keyword;
     atom->value = value;
+
+    return true;
 }
 
 static Tokenizer_keyword get_keyword(char *val_ref)
