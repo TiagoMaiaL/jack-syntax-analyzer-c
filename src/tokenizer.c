@@ -73,6 +73,7 @@ static void tokenize_str_literal(Tokenizer_atom *atom);
 
 static char peak();
 static char get_char();
+static void seek_back(int amount);
 static Tokenizer_atom make_empty_atom();
 
 void tokenizer_start(FILE *handle)
@@ -91,7 +92,6 @@ Tokenizer_atom tokenizer_next()
     Tokenizer_atom atom = make_empty_atom();
 
     if (state == TK_ERROR) {
-        printf("Error\n");
         atom.type = TK_TYPE_ERROR;
         return atom;
     }
@@ -133,8 +133,7 @@ static bool tokenize_symbol(Tokenizer_atom *atom)
     Tokenizer_symbol symbol = get_symbol(ch);
 
     if (symbol == TK_SYMBOL_UNDEFINED || is_in_comment_start(ch)) {
-        fseek(source, -1, SEEK_CUR);
-        state = TK_DEFAULT;
+        seek_back(1);
         return false;
     }
 
@@ -177,8 +176,7 @@ static bool tokenize_comment(Tokenizer_atom *atom)
     }
 
     if (!is_in_comment_start(ch)) {
-        fseek(source, -1, SEEK_CUR);
-        state = TK_DEFAULT;
+        seek_back(1);
         return false;
     }
 
@@ -325,6 +323,16 @@ static char get_char()
     }
 
     return ch;
+}
+
+static void seek_back(int amount)
+{
+    if (source == NULL || state == TK_ERROR) {
+        return;
+    }
+
+    fseek(source, -amount, SEEK_CUR);
+    state = TK_DEFAULT;
 }
 
 static Tokenizer_atom make_empty_atom()

@@ -30,6 +30,8 @@ void test_tokenizer()
     tst_unit("Str literals", test_tokenizing_str_literals);
     tst_unit("Comments", test_tokenizing_comments);
 
+    erase_test_file();
+
     tst_suite_finish();
 }
 
@@ -74,8 +76,6 @@ static void test_tokenizing_symbols()
     tst_true(atom.value == NULL);
 
     tst_true(tokenizer_finished());
-
-    erase_test_file();
 }
 
 static void test_tokenizing_keywords()
@@ -172,8 +172,6 @@ static void test_tokenizing_comments()
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);
     free(atom.value);
-
-    erase_test_file();
 }
 
 static void prepare_test_file(const char *file_content)
