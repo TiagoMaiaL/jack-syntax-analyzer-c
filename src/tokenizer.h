@@ -67,6 +67,7 @@ typedef struct {
     Tokenizer_atom_type type;
     Tokenizer_symbol symbol;
     Tokenizer_keyword keyword;
+    bool is_complete;
     char *value;
 } Tokenizer_atom;
 

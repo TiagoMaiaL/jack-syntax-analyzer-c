@@ -74,7 +74,7 @@ static bool tokenize_int_constant(Tokenizer_atom *atom);
 static char *get_int_constant();
 
 static bool tokenize_str_constant(Tokenizer_atom *atom);
-static char *get_str_constant();
+static char *get_str_constant(bool *is_complete);
 
 static char peak();
 static char get_char();
@@ -162,6 +162,7 @@ static bool tokenize_symbol(Tokenizer_atom *atom)
     atom->value = value;
     atom->type = TK_TYPE_SYMBOL;
     atom->symbol = get_symbol(ch);
+    atom->is_complete = true;
 
     return true;
 }
@@ -216,6 +217,10 @@ static bool tokenize_comment(Tokenizer_atom *atom)
         }
     }
 
+    if (!is_line_comment && (ch == EOF || peak() != '/')) {
+        // TODO: Deal with incomplete block-comment tokens
+    }
+
     char *value = malloc(sizeof(char) * (comment_len + 1));
 
     if (is_line_comment) {
@@ -231,6 +236,7 @@ static bool tokenize_comment(Tokenizer_atom *atom)
     
     atom->type = TK_TYPE_COMMENT;
     atom->value = value;
+    atom->is_complete = true;
 
     return true;
 }
@@ -253,6 +259,7 @@ static bool tokenize_keyword(Tokenizer_atom *atom)
     atom->type = TK_TYPE_KEYWORD;
     atom->keyword = keyword;
     atom->value = value;
+    atom->is_complete = true;
 
     return true;
 }
@@ -310,6 +317,7 @@ static bool tokenize_identifier(Tokenizer_atom *atom)
 
     atom->type = TK_TYPE_IDENTIFIER;
     atom->value = identifier;
+    atom->is_complete = true;
 
     return true;
 }
@@ -370,6 +378,7 @@ static bool tokenize_int_constant(Tokenizer_atom *atom)
 
     atom->type = TK_TYPE_INT_CONSTANT;
     atom->value = integer;
+    atom->is_complete = true;
 
     return true;
 }
@@ -409,7 +418,8 @@ static char *get_int_constant()
 
 static bool tokenize_str_constant(Tokenizer_atom *atom)
 {
-    char *str_literal = get_str_constant();
+    bool is_complete = false;
+    char *str_literal = get_str_constant(&is_complete);
 
     if (str_literal == NULL) {
         return false;
@@ -417,11 +427,12 @@ static bool tokenize_str_constant(Tokenizer_atom *atom)
 
     atom->type = TK_TYPE_STR_CONSTANT;
     atom->value = str_literal;
+    atom->is_complete = is_complete;
 
     return true;
 }
 
-static char *get_str_constant()
+static char *get_str_constant(bool *is_complete)
 {
     char ch;
     int len;
@@ -448,11 +459,16 @@ static char *get_str_constant()
         len++;
     }
 
-    if (ch == '\n' || (ch == EOF && state != TK_ERROR)) {
-        // TODO: Handle incomplete string state.
-    }
+    *is_complete = !(ch == '\n'           || 
+                     state == TK_FINISHED || 
+                     state == TK_ERROR);
 
-    seek_back(ch != '\"' ? len + 1 : len);
+    int seek_amount = len;
+    if (ch != '\"' && ch != EOF) {
+        seek_amount++;
+    }
+    seek_back(seek_amount);
+
     value = malloc(sizeof(char) * (len + 1));
     for (int i = 0; i < len; i++) {
         value[i] = get_char();
@@ -518,6 +534,7 @@ static Tokenizer_atom make_empty_atom()
     atom.type = TK_TYPE_UNDEFINED;
     atom.symbol = TK_SYMBOL_UNDEFINED;
     atom.keyword = TK_KEYWORD_UNDEFINED;
+    atom.is_complete = false;
     return atom;
 }
 
