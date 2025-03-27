@@ -8,8 +8,8 @@ A Jack syntax analyzer written in C, for the Nand2Tetris course.
 - [x] Parse arguments
 - [x] Add module to read jack file
 - [x] Port unit testing lib
-- [ ] Add module to tokenize source code (WIP)
-- [ ] Unit test tokenization
+- [x] Add module to tokenize source code
+- [x] Unit test tokenization
 - [ ] Add module to parse tokens and form an AST
 - [ ] Unit test parsing
 - [ ] Add module to write a string to a file

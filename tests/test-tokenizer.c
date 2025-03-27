@@ -332,9 +332,6 @@ static void test_tokenizing_str_literals()
     tst_true(!atom.is_complete);
     tst_true(strcmp(atom.value, "\"asdf") == 0);
 
-    // TODO: tokenize whitespaces.
-    //atom = tokenizer_next(); // \n
-
     prepare_test_file("\"asdf");
     tokenizer_start(test_file_handle); 
 
