@@ -78,6 +78,8 @@ static char *get_int_constant();
 static bool tokenize_str_constant(Tokenizer_atom *atom);
 static char *get_str_constant(bool *is_complete);
 
+static bool tokenize_unexpected_char(Tokenizer_atom *atom);
+
 static char peak();
 static char get_char();
 static void seek_back(int amount);
@@ -131,9 +133,7 @@ Tokenizer_atom tokenizer_next()
         return atom;
     }
 
-    // TODO: Treat other unexpected kinds of tokens
-    // Unexpected symbols or chars
-    
+    tokenize_unexpected_char(&atom);
     return atom;
 }
 
@@ -516,6 +516,18 @@ static char *get_str_constant(bool *is_complete)
     value[len] = '\0';
 
     return value;
+}
+
+static bool tokenize_unexpected_char(Tokenizer_atom *atom)
+{
+    if (state == TK_FINISHED || state == TK_ERROR) {
+        return false;
+    }
+
+    atom->value = malloc(sizeof(char) * 2);
+    atom->value[0] = get_char();
+    atom->value[1] = '\0';
+    return true;
 }
 
 static char peak()
