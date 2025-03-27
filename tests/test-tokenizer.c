@@ -16,6 +16,7 @@ static void test_tokenizing_identifiers();
 static void test_tokenizing_int_literals();
 static void test_tokenizing_str_literals();
 static void test_tokenizing_comments();
+static void test_tokenizing_simple_file();
 static char *test_file_content;
 static void prepare_test_file(const char *file_content);
 static void erase_test_file();
@@ -31,6 +32,7 @@ void test_tokenizer()
     tst_unit("Int literals", test_tokenizing_int_literals);
     tst_unit("Str literals", test_tokenizing_str_literals);
     tst_unit("Comments", test_tokenizing_comments);
+    tst_unit("Simple file", test_tokenizing_simple_file);
 
     tst_suite_finish();
 }
@@ -425,6 +427,145 @@ static void test_tokenizing_comments()
     tst_true(strcmp(atom.value, "/* asdf") == 0);
     free(atom.value);
 
+
+    atom = tokenizer_next();
+    tst_true(tokenizer_finished());
+
+    erase_test_file();
+}
+
+static void test_tokenizing_simple_file()
+{
+    char *source_code = "class Main\n"
+                        "{\n"
+                        "\tfunction void main()\n"
+                        "\t{\n"
+                        "\t\treturn;\n"
+                        "\t}\n"
+                        "}";
+    Tokenizer_atom atom;
+
+    prepare_test_file(source_code);
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_KEYWORD);
+    tst_true(atom.keyword == TK_KEYWORD_CLASS);
+    tst_true(strcmp(atom.value, "class") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(strcmp(atom.value, " ") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_IDENTIFIER);
+    tst_true(strcmp(atom.value, "Main") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(strcmp(atom.value, "\n") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.symbol == TK_SYMBOL_L_CURLY);
+    tst_true(strcmp(atom.value, "{") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(strcmp(atom.value, "\n\t") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_KEYWORD);
+    tst_true(atom.keyword == TK_KEYWORD_FUNCTION);
+    tst_true(strcmp(atom.value, "function") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(strcmp(atom.value, " ") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_KEYWORD);
+    tst_true(atom.keyword == TK_KEYWORD_VOID);
+    tst_true(strcmp(atom.value, "void") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(strcmp(atom.value, " ") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_IDENTIFIER);
+    tst_true(strcmp(atom.value, "main") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.symbol == TK_SYMBOL_L_PAREN);
+    tst_true(strcmp(atom.value, "(") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.symbol == TK_SYMBOL_R_PAREN);
+    tst_true(strcmp(atom.value, ")") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(strcmp(atom.value, "\n\t") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.symbol == TK_SYMBOL_L_CURLY);
+    tst_true(strcmp(atom.value, "{") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(strcmp(atom.value, "\n\t\t") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_KEYWORD);
+    tst_true(atom.keyword == TK_KEYWORD_RETURN);
+    tst_true(strcmp(atom.value, "return") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.symbol == TK_SYMBOL_SEMICOLON);
+    tst_true(strcmp(atom.value, ";") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(strcmp(atom.value, "\n\t") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.symbol == TK_SYMBOL_R_CURLY);
+    tst_true(strcmp(atom.value, "}") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(strcmp(atom.value, "\n") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.symbol == TK_SYMBOL_R_CURLY);
+    tst_true(strcmp(atom.value, "}") == 0);
 
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
