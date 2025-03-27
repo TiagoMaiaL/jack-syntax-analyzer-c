@@ -9,6 +9,7 @@
 
 static FILE *test_file_handle = NULL;
 
+static void test_tokenizing_whitespace();
 static void test_tokenizing_symbols();
 static void test_tokenizing_keywords();
 static void test_tokenizing_identifiers();
@@ -23,6 +24,7 @@ void test_tokenizer()
 {
     tst_suite_begin("Tokenizer");
 
+    tst_unit("Whitespace", test_tokenizing_whitespace);
     tst_unit("Symbols", test_tokenizing_symbols);
     tst_unit("Keywords", test_tokenizing_keywords);
     tst_unit("Identifiers", test_tokenizing_identifiers);
@@ -31,6 +33,39 @@ void test_tokenizer()
     tst_unit("Comments", test_tokenizing_comments);
 
     tst_suite_finish();
+}
+
+static void test_tokenizing_whitespace()
+{
+    prepare_test_file(" ");
+    tokenizer_start(test_file_handle); 
+
+    Tokenizer_atom atom = tokenizer_next();
+ 
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(atom.is_complete);
+    tst_true(strcmp(atom.value, " ") == 0);
+    free(atom.value);
+
+
+    prepare_test_file(" \t  class");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_WHITESPACE);
+    tst_true(atom.is_complete);
+    tst_true(strcmp(atom.value, " \t  ") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_KEYWORD);
+    tst_true(strcmp(atom.value, "class") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(tokenizer_finished());
+
+    erase_test_file();
 }
 
 static void test_tokenizing_symbols()

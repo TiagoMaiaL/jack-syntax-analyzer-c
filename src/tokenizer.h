@@ -53,6 +53,7 @@ typedef enum {
 } Tokenizer_symbol;
 
 typedef enum {
+    TK_TYPE_WHITESPACE,
     TK_TYPE_SYMBOL,
     TK_TYPE_COMMENT,
     TK_TYPE_KEYWORD,

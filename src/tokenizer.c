@@ -58,6 +58,8 @@ static const char symbol_chars[] = {
 static FILE *source;
 static TKState state;
 
+static bool tokenize_whitespace(Tokenizer_atom *atom);
+
 static bool tokenize_symbol(Tokenizer_atom *atom);
 static Tokenizer_symbol get_symbol(char ch);
 
@@ -101,6 +103,10 @@ Tokenizer_atom tokenizer_next()
         return atom;
     }
 
+    if (tokenize_whitespace(&atom)) {
+        return atom;
+    }
+
     if (tokenize_symbol(&atom)) {
         return atom;
     }
@@ -126,6 +132,7 @@ Tokenizer_atom tokenizer_next()
     }
 
     // TODO: Treat other unexpected kinds of tokens
+    // Unexpected symbols or chars
     
     return atom;
 }
@@ -133,6 +140,42 @@ Tokenizer_atom tokenizer_next()
 bool tokenizer_finished()
 {
     return state == TK_FINISHED;
+}
+
+static bool tokenize_whitespace(Tokenizer_atom *atom)
+{
+    if (state == TK_ERROR) {
+        return false;
+    }
+
+    int len;
+    char ch;
+    char *value;
+
+    len = 0;
+
+    while(isspace(peak())) {
+        len++;
+        ch = get_char();
+    }
+
+    if (len == 0) {
+        return false;
+    }
+
+    seek_back(len);
+
+    value = malloc(sizeof(char) * (len + 1));
+    for (int i = 0; i < len; i++) {
+        value[i] = get_char();
+    }
+    value[len] = '\0';
+
+    atom->type = TK_TYPE_WHITESPACE;
+    atom->value = value;
+    atom->is_complete = true;
+    
+    return true;
 }
 
 static bool tokenize_symbol(Tokenizer_atom *atom)
