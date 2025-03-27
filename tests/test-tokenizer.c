@@ -229,7 +229,58 @@ static void test_tokenizing_int_literals()
 
 static void test_tokenizing_str_literals()
 {
+    prepare_test_file("\"\"");
+    tokenizer_start(test_file_handle); 
 
+    Tokenizer_atom atom = tokenizer_next();
+
+    tst_true(atom.type == TK_TYPE_STR_CONSTANT);
+    tst_true(strcmp(atom.value, "\"\"") == 0);
+
+
+    prepare_test_file("\"testing str literal\"");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_STR_CONSTANT);
+    tst_true(strcmp(atom.value, "\"testing str literal\"") == 0);
+
+
+    prepare_test_file("\"asdf;NULL,!+=asdfkjh:::121313__\"");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_STR_CONSTANT);
+    tst_true(strcmp(atom.value, "\"asdf;NULL,!+=asdfkjh:::121313__\"") == 0);
+
+
+    prepare_test_file("x=\"test\";");
+    tokenizer_start(test_file_handle); 
+
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_IDENTIFIER);
+    tst_true(strcmp(atom.value, "x") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(strcmp(atom.value, "=") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_STR_CONSTANT);
+    tst_true(strcmp(atom.value, "\"test\"") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(strcmp(atom.value, ";") == 0);
+
+
+    // TODO: Test tokenizing unfinished strings (\n and EOF)
+
+    atom = tokenizer_next();
+    tst_true(tokenizer_finished());
+
+    erase_test_file();
 }
 
 static void test_tokenizing_comments()

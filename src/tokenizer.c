@@ -74,7 +74,7 @@ static bool tokenize_int_constant(Tokenizer_atom *atom);
 static char *get_int_constant();
 
 static bool tokenize_str_constant(Tokenizer_atom *atom);
-static void get_str_constant();
+static char *get_str_constant();
 
 static char peak();
 static char get_char();
@@ -121,7 +121,10 @@ Tokenizer_atom tokenizer_next()
         return atom;
     }
 
-    // TODO: Tokenize str constant
+    if (tokenize_str_constant(&atom)) {
+        return atom;
+    }
+
     // TODO: Treat other unexpected kinds of tokens
     
     return atom;
@@ -359,6 +362,9 @@ static bool tokenize_int_constant(Tokenizer_atom *atom)
     char *integer = get_int_constant();
 
     if (integer == NULL) {
+        if (state == TK_ERROR) {
+            atom->type = TK_TYPE_ERROR;
+        }
         return false;
     }
 
@@ -403,7 +409,57 @@ static char *get_int_constant()
 
 static bool tokenize_str_constant(Tokenizer_atom *atom)
 {
-    return false;
+    char *str_literal = get_str_constant();
+
+    if (str_literal == NULL) {
+        return false;
+    }
+
+    atom->type = TK_TYPE_STR_CONSTANT;
+    atom->value = str_literal;
+
+    return true;
+}
+
+static char *get_str_constant()
+{
+    char ch;
+    int len;
+    char *value;
+
+    ch = get_char();
+
+    if (state == TK_FINISHED || state == TK_ERROR) {
+        return NULL;
+    }
+
+    if (ch != '\"') {
+        seek_back(1);
+        return NULL;
+    }
+
+    len = 1;
+
+    while ((ch = get_char()) != '\n' && ch != '\"' && ch != EOF) {
+        len++;
+    }
+
+    if (ch == '\"') {
+        len++;
+    }
+
+    if (ch == '\n' || (ch == EOF && state != TK_ERROR)) {
+        // TODO: Handle incomplete string state.
+    }
+
+    seek_back(ch != '\"' ? len + 1 : len);
+    value = malloc(sizeof(char) * (len + 1));
+    for (int i = 0; i < len; i++) {
+        value[i] = get_char();
+    }
+    value[len] = '\0';
+
+    return value;
 }
 
 static char peak()
