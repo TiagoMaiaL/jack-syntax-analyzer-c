@@ -57,7 +57,8 @@ typedef enum {
     TK_TYPE_COMMENT,
     TK_TYPE_KEYWORD,
     TK_TYPE_IDENTIFIER,
-    TK_TYPE_CONSTANT,
+    TK_TYPE_INT_CONSTANT,
+    TK_TYPE_STR_CONSTANT,
     TK_TYPE_ERROR,
     TK_TYPE_UNDEFINED
 } Tokenizer_atom_type;

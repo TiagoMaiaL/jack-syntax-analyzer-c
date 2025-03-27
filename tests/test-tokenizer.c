@@ -164,7 +164,63 @@ static void test_tokenizing_identifiers()
 
 static void test_tokenizing_int_literals()
 {
+    prepare_test_file("1234");
+    tokenizer_start(test_file_handle); 
 
+    Tokenizer_atom atom = tokenizer_next();
+
+    tst_true(atom.type == TK_TYPE_INT_CONSTANT);
+    tst_true(strcmp(atom.value, "1234") == 0);
+
+
+    prepare_test_file("0");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+
+    tst_true(atom.type == TK_TYPE_INT_CONSTANT);
+    tst_true(strcmp(atom.value, "1234") == 0);
+
+
+    prepare_test_file("33");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+
+    tst_true(atom.type == TK_TYPE_INT_CONSTANT);
+    tst_true(strcmp(atom.value, "33") == 0);
+
+
+    prepare_test_file("x=143+59219;");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_IDENTIFIER);
+    tst_true(strcmp(atom.value, "x") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.type == TK_SYMBOL_EQUAL);
+    tst_true(strcmp(atom.value, "=") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_INT_CONSTANT);
+    tst_true(strcmp(atom.value, "143") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_INT_CONSTANT);
+    tst_true(strcmp(atom.value, "59219") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.symbol == TK_SYMBOL_SEMICOLON);
+    tst_true(strcmp(atom.value, ";") == 0);
+
+
+    atom = tokenizer_next();
+    tst_true(tokenizer_finished());
+
+    erase_test_file();
 }
 
 static void test_tokenizing_str_literals()
