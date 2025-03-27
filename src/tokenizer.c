@@ -70,8 +70,11 @@ static Tokenizer_keyword get_keyword(char **val_ref);
 static bool tokenize_identifier(Tokenizer_atom *atom);
 static char *get_identifier();
 
-static void tokenize_int_literal(Tokenizer_atom *atom);
-static void tokenize_str_literal(Tokenizer_atom *atom);
+static bool tokenize_int_constant(Tokenizer_atom *atom);
+static char *get_int_constant();
+
+static bool tokenize_str_constant(Tokenizer_atom *atom);
+static void get_str_constant();
 
 static char peak();
 static char get_char();
@@ -114,8 +117,12 @@ Tokenizer_atom tokenizer_next()
         return atom;
     }
 
-    // TODO: Tokenize int constant
+    if (tokenize_int_constant(&atom)) {
+        return atom;
+    }
+
     // TODO: Tokenize str constant
+    // TODO: Treat other unexpected kinds of tokens
     
     return atom;
 }
@@ -347,14 +354,56 @@ static char *get_identifier()
     return value;
 }
 
-static void tokenize_int_literal(Tokenizer_atom *atom)
+static bool tokenize_int_constant(Tokenizer_atom *atom)
 {
+    char *integer = get_int_constant();
 
+    if (integer == NULL) {
+        return false;
+    }
+
+    atom->type = TK_TYPE_INT_CONSTANT;
+    atom->value = integer;
+
+    return true;
 }
 
-static void tokenize_str_literal(Tokenizer_atom *atom)
+static char *get_int_constant()
 {
+    char ch;
+    int len;
+    char *value;
 
+    ch = get_char();
+
+    if (state == TK_FINISHED || state == TK_ERROR) {
+        return NULL;
+    }
+
+    if (!isdigit(ch)) {
+        seek_back(1);
+        return NULL;
+    }
+
+    len = 1;
+
+    while (isdigit(ch = get_char())) {
+        len++;
+    }
+
+    seek_back(ch != EOF ? len + 1 : len);
+    value = malloc(sizeof(char) * (len + 1));
+    for (int i = 0; i < len; i++) {
+        value[i] = get_char();
+    }
+    value[len] = '\0';
+
+    return value;
+}
+
+static bool tokenize_str_constant(Tokenizer_atom *atom)
+{
+    return false;
 }
 
 static char peak()

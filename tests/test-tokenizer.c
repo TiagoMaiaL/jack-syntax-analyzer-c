@@ -179,7 +179,7 @@ static void test_tokenizing_int_literals()
     atom = tokenizer_next();
 
     tst_true(atom.type == TK_TYPE_INT_CONSTANT);
-    tst_true(strcmp(atom.value, "1234") == 0);
+    tst_true(strcmp(atom.value, "0") == 0);
 
 
     prepare_test_file("33");
@@ -190,7 +190,6 @@ static void test_tokenizing_int_literals()
     tst_true(atom.type == TK_TYPE_INT_CONSTANT);
     tst_true(strcmp(atom.value, "33") == 0);
 
-
     prepare_test_file("x=143+59219;");
     tokenizer_start(test_file_handle); 
 
@@ -200,12 +199,17 @@ static void test_tokenizing_int_literals()
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);
-    tst_true(atom.type == TK_SYMBOL_EQUAL);
+    tst_true(atom.symbol == TK_SYMBOL_EQUAL);
     tst_true(strcmp(atom.value, "=") == 0);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_INT_CONSTANT);
     tst_true(strcmp(atom.value, "143") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.symbol == TK_SYMBOL_PLUS);
+    tst_true(strcmp(atom.value, "+") == 0);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_INT_CONSTANT);
