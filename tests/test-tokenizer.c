@@ -375,15 +375,23 @@ static void test_tokenizing_comments()
     tst_true(strcmp(atom.value, "/* asdf\nasdf*/") == 0);
     free(atom.value);
 
-    // TODO: Test behavior of unfinished block comment.
-
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(strcmp(atom.value, "/") == 0);
     free(atom.value);
     
+    // unfinished block comment
+    prepare_test_file("/* asdf");
+    tokenizer_start(test_file_handle); 
+   
     atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_COMMENT);
+    tst_true(!atom.is_complete);
+    tst_true(strcmp(atom.value, "/* asdf") == 0);
+    free(atom.value);
 
+
+    atom = tokenizer_next();
     tst_true(tokenizer_finished());
 
     erase_test_file();

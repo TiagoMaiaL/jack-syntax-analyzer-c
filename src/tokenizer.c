@@ -212,23 +212,21 @@ static bool tokenize_comment(Tokenizer_atom *atom)
         }
 
         if (!is_line_comment && (ch == '*' && peak() == '/')) {
-            comment_len += 1; // account for peak().
+            ch = get_char(); // Move cursor.
+            comment_len += 1;
             break;
         }
     }
 
-    if (!is_line_comment && (ch == EOF || peak() != '/')) {
-        // TODO: Deal with incomplete block-comment tokens
+    if (is_line_comment) {
+        atom->is_complete = true;
+    } else {
+        atom->is_complete = ch != EOF;
     }
+
+    seek_back(comment_len);
 
     char *value = malloc(sizeof(char) * (comment_len + 1));
-
-    if (is_line_comment) {
-        fseek(source, -comment_len, SEEK_CUR);
-    } else {
-        fseek(source, -(comment_len - 1), SEEK_CUR);
-    }
-
     for (int i = 0; i < comment_len; i++) {
         value[i] = get_char();
     }
@@ -236,7 +234,6 @@ static bool tokenize_comment(Tokenizer_atom *atom)
     
     atom->type = TK_TYPE_COMMENT;
     atom->value = value;
-    atom->is_complete = true;
 
     return true;
 }
