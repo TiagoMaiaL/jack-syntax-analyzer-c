@@ -126,6 +126,36 @@ static void test_tokenizing_identifiers()
     tst_true(atom.type == TK_TYPE_IDENTIFIER);
     tst_true(strcmp(atom.value, "nullable") == 0);
 
+
+    prepare_test_file("_asdf");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_IDENTIFIER);
+    tst_true(strcmp(atom.value, "_asdf") == 0);
+
+
+    prepare_test_file("__7__123");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_IDENTIFIER);
+    tst_true(strcmp(atom.value, "__7__123") == 0);
+
+
+    prepare_test_file("__7__;");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_IDENTIFIER);
+    tst_true(strcmp(atom.value, "__7__") == 0);
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(atom.symbol == TK_SYMBOL_SEMICOLON);
+    tst_true(strcmp(atom.value, ";") == 0);
+
+
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
 

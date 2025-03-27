@@ -332,6 +332,10 @@ static char *get_identifier()
         len++;
     }
 
+    if (!isalnum(ch) && ch != '_' && ch != EOF) {
+        seek_back(1);
+    }
+
     seek_back(len);
 
     value = malloc(sizeof(char) * (len + 1));
