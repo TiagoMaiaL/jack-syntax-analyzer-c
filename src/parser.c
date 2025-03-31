@@ -6,8 +6,9 @@
 static Tokenizer_atom current_atom;
 
 static Parser_class_dec parse_class_dec();
-static void parse_class_var_dec();
-static void parse_subroutine();
+static void parse_class_vars_dec(Parser_class_dec *class);
+static void parse_type();
+static void parse_class_subroutines();
 static void parse_param_list();
 static void parse_var_dec();
 static void parse_statements();
@@ -45,8 +46,9 @@ static Parser_class_dec parse_class_dec()
     consume_atom();
     expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' expected");
     
+    parse_class_vars_dec(&class_dec);
+
     // TODO: Parse class body:
-    // static vars
     // static funcs
     // constructor
     // fields
@@ -56,6 +58,59 @@ static Parser_class_dec parse_class_dec()
     expect(current_atom.symbol == TK_SYMBOL_R_CURLY, "'}' expected");
 
     return class_dec;
+}
+
+static void parse_class_vars_dec(Parser_class_dec *class)
+{
+    // TODO: Parse multiple variables.
+    // TODO: Parse multiple variables with list of names in one line.
+    bool has_var_decs;
+
+    consume_atom(); // TODO: Use peak() instead.
+    has_var_decs = current_atom.keyword == TK_KEYWORD_STATIC || 
+                   current_atom.keyword == TK_KEYWORD_FIELD;
+
+    if (!has_var_decs) {
+        class->var_count = 0;
+        return;
+    }
+
+    Parser_class_var_dec var_dec;
+
+    if (current_atom.keyword == TK_KEYWORD_STATIC) {
+        var_dec.scope = PARSER_VAR_STATIC;
+    } else {
+        var_dec.scope = PARSER_VAR_FIELD;
+    }
+
+    consume_atom();
+    expect(
+        current_atom.value != NULL &&
+        (
+            current_atom.keyword == TK_KEYWORD_INT ||
+            current_atom.keyword == TK_KEYWORD_CHAR ||
+            current_atom.keyword == TK_KEYWORD_BOOLEAN ||
+            current_atom.type == TK_TYPE_IDENTIFIER
+        ),
+        "Expected type in variable declaration"
+    );
+    var_dec.type_name = current_atom.value;
+
+    consume_atom();
+    expect(
+        current_atom.value != NULL && 
+        current_atom.type == TK_TYPE_IDENTIFIER,
+        "Expected variable name in declaration"
+    );
+    var_dec.name = current_atom.value;
+    
+    consume_atom();
+    expect(
+        current_atom.symbol == TK_SYMBOL_SEMICOLON,
+        "Expected ';' at end of variable declaration."
+    );
+    class->var_count = 1;
+    class->vars[0] = var_dec;
 }
 
 static Tokenizer_atom consume_atom()
