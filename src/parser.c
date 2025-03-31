@@ -64,17 +64,20 @@ static void parse_class_vars_dec(Parser_class_dec *class)
 {
     // TODO: Parse multiple variables.
     // TODO: Parse multiple variables with list of names in one line.
+    // TODO: Unit test tokenizer peaking.
     bool has_var_decs;
 
-    consume_atom(); // TODO: Use peak() instead.
-    has_var_decs = current_atom.keyword == TK_KEYWORD_STATIC || 
-                   current_atom.keyword == TK_KEYWORD_FIELD;
+    Tokenizer_atom peak_atom = tokenizer_peak();
+    has_var_decs = peak_atom.keyword == TK_KEYWORD_STATIC || 
+                   peak_atom.keyword == TK_KEYWORD_FIELD;
 
     if (!has_var_decs) {
         class->var_count = 0;
         return;
     }
 
+    consume_atom();
+    
     Parser_class_var_dec var_dec;
 
     if (current_atom.keyword == TK_KEYWORD_STATIC) {

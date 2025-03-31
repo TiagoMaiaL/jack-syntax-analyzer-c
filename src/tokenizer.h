@@ -73,6 +73,7 @@ typedef struct {
 } Tokenizer_atom;
 
 void tokenizer_start(FILE *handle);
+Tokenizer_atom tokenizer_peak();
 Tokenizer_atom tokenizer_next();
 bool tokenizer_finished();
 

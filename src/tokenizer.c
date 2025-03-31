@@ -137,6 +137,26 @@ Tokenizer_atom tokenizer_next()
     return atom;
 }
 
+Tokenizer_atom tokenizer_peak()
+{
+    // TODO: Unit test tokenizer peaking.
+    int token_len = 0;
+    char ch;
+    Tokenizer_atom atom = tokenizer_next();
+
+    if (atom.value != NULL) {
+        for (int i = 0; ; i++) {
+            if ((ch = atom.value[i]) != '\0') {
+                break;
+            }
+            token_len++;
+        }
+    }
+    seek_back(token_len);
+
+    return atom;
+}
+
 bool tokenizer_finished()
 {
     return state == TK_FINISHED;
