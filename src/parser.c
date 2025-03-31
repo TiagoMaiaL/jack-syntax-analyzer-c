@@ -6,7 +6,7 @@
 static Tokenizer_atom current_atom;
 
 static Parser_class_dec parse_class_dec();
-static void parse_class_vars_dec(Parser_class_dec *class);
+static void parse_class_vars_dec(Parser_class_dec *class, short var_i);
 static void parse_type();
 static void parse_class_subroutines();
 static void parse_param_list();
@@ -21,6 +21,7 @@ static void parse_expression();
 static void parse_term();
 static void parse_expression_list();
 static Tokenizer_atom consume_atom();
+static Tokenizer_atom peak_atom();
 static void expect(bool expression, char *failure_msg);
 static void exit_parsing(char *msg);
 
@@ -38,21 +39,18 @@ static Parser_class_dec parse_class_dec()
     expect(current_atom.keyword == TK_KEYWORD_CLASS, "'class' keyword expected");
 
     Parser_class_dec class_dec;
+    class_dec.vars_count = 0;
+    class_dec.funcs_count = 0; 
 
-    consume_atom();
-    expect(current_atom.type == TK_TYPE_IDENTIFIER, "Class name expected");
+    consume_atom(); 
+    expect(current_atom.type == TK_TYPE_IDENTIFIER, "Class name expected"); 
     class_dec.identifier = current_atom;
 
     consume_atom();
     expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' expected");
     
-    parse_class_vars_dec(&class_dec);
-
-    // TODO: Parse class body:
-    // static funcs
-    // constructor
-    // fields
-    // methods
+    parse_class_vars_dec(&class_dec, 0);
+    // TODO: Parse class functions:
 
     consume_atom();
     expect(current_atom.symbol == TK_SYMBOL_R_CURLY, "'}' expected");
@@ -60,30 +58,29 @@ static Parser_class_dec parse_class_dec()
     return class_dec;
 }
 
-static void parse_class_vars_dec(Parser_class_dec *class)
+static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
 {
-    // TODO: Parse multiple variables.
     // TODO: Parse multiple variables with list of names in one line.
     // TODO: Unit test tokenizer peaking.
     bool has_var_decs;
 
-    Tokenizer_atom peak_atom = tokenizer_peak();
-    has_var_decs = peak_atom.keyword == TK_KEYWORD_STATIC || 
-                   peak_atom.keyword == TK_KEYWORD_FIELD;
+    Tokenizer_atom peak = peak_atom();
+    has_var_decs = peak.keyword == TK_KEYWORD_STATIC || 
+                   peak.keyword == TK_KEYWORD_FIELD;
 
     if (!has_var_decs) {
-        class->var_count = 0;
         return;
     }
 
-    consume_atom();
-    
     Parser_class_var_dec var_dec;
 
+    consume_atom();
     if (current_atom.keyword == TK_KEYWORD_STATIC) {
         var_dec.scope = PARSER_VAR_STATIC;
-    } else {
+    } else if (current_atom.keyword == TK_KEYWORD_FIELD) {
         var_dec.scope = PARSER_VAR_FIELD;
+    } else {
+        exit_parsing("Expected a valid scope for the variable declaration");
     }
 
     consume_atom();
@@ -112,8 +109,12 @@ static void parse_class_vars_dec(Parser_class_dec *class)
         current_atom.symbol == TK_SYMBOL_SEMICOLON,
         "Expected ';' at end of variable declaration."
     );
-    class->var_count = 1;
-    class->vars[0] = var_dec;
+
+    class->vars[var_i] = var_dec;
+    var_i++;
+    class->vars_count = var_i;
+
+    parse_class_vars_dec(class, var_i);
 }
 
 static Tokenizer_atom consume_atom()
@@ -141,6 +142,22 @@ static Tokenizer_atom consume_atom()
 
     current_atom = atom;
     return current_atom;
+}
+
+static Tokenizer_atom peak_atom()
+{
+    Tokenizer_atom atom;
+    bool should_skip = true;
+
+    while(should_skip) {
+        atom = tokenizer_peak();
+        should_skip = atom.type == TK_TYPE_COMMENT || 
+                      atom.type == TK_TYPE_WHITESPACE;
+        if (should_skip)
+            tokenizer_next();
+    }
+
+    return atom;
 }
 
 #define EXPECT_FAIL_MSG     "Unexpected token: "

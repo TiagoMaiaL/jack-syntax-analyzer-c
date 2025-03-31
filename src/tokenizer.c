@@ -146,7 +146,7 @@ Tokenizer_atom tokenizer_peak()
 
     if (atom.value != NULL) {
         for (int i = 0; ; i++) {
-            if ((ch = atom.value[i]) != '\0') {
+            if ((ch = atom.value[i]) == '\0') {
                 break;
             }
             token_len++;
