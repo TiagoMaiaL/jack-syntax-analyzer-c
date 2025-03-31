@@ -6,7 +6,6 @@
 static Tokenizer_atom current_atom;
 
 static Parser_class_dec parse_class_dec();
-static void parse_class_body(Parser_class_dec *class);
 static void parse_class_var_dec();
 static void parse_subroutine();
 static void parse_param_list();
@@ -42,6 +41,9 @@ static Parser_class_dec parse_class_dec()
     consume_atom();
     expect(current_atom.type == TK_TYPE_IDENTIFIER, "Class name expected");
     class_dec.identifier = current_atom;
+
+    consume_atom();
+    expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' expected");
     
     // TODO: Parse class body:
     // static vars
@@ -49,6 +51,9 @@ static Parser_class_dec parse_class_dec()
     // constructor
     // fields
     // methods
+
+    consume_atom();
+    expect(current_atom.symbol == TK_SYMBOL_R_CURLY, "'}' expected");
 
     return class_dec;
 }
