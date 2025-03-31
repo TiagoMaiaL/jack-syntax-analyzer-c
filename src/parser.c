@@ -28,7 +28,6 @@ Parser_jack_syntax parser_parse(FILE *source) {
     tokenizer_start(source);
 
     Parser_jack_syntax jack_syntax;
-    printf("Starting parsing phase\n");
     jack_syntax.class_dec = parse_class_dec();
     return jack_syntax;
 }
@@ -41,7 +40,7 @@ static Parser_class_dec parse_class_dec()
     Parser_class_dec class_dec;
 
     consume_atom();
-    expect(current_atom.keyword == TK_TYPE_IDENTIFIER, "'class' identifier expected");
+    expect(current_atom.type == TK_TYPE_IDENTIFIER, "Class name expected");
     class_dec.identifier = current_atom;
     
     // TODO: Parse class body:
@@ -60,7 +59,7 @@ static Tokenizer_atom consume_atom()
     bool should_skip = true;
 
     while(should_skip) {
-        Tokenizer_atom atom = tokenizer_next();
+        atom = tokenizer_next();
         should_skip = atom.type == TK_TYPE_COMMENT || 
                       atom.type == TK_TYPE_WHITESPACE;
     }
