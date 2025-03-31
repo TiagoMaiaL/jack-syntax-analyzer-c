@@ -65,6 +65,7 @@ static void test_tokenizing_whitespace()
     free(atom.value);
 
     atom = tokenizer_next();
+
     tst_true(tokenizer_finished());
 
     erase_test_file();

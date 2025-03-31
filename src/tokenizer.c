@@ -155,6 +155,7 @@ static bool tokenize_whitespace(Tokenizer_atom *atom)
 
     while(isspace(peak())) {
         len++;
+        get_char();
     }
 
     if (len == 0) {
@@ -172,7 +173,7 @@ static bool tokenize_whitespace(Tokenizer_atom *atom)
     atom->type = TK_TYPE_WHITESPACE;
     atom->value = value;
     atom->is_complete = true;
-    
+
     return true;
 }
 
