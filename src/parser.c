@@ -60,7 +60,6 @@ static Parser_class_dec parse_class_dec()
 
 static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
 {
-    // TODO: Parse multiple variables with list of names in one line.
     // TODO: Unit test tokenizer peaking.
     bool has_var_decs;
 
@@ -73,6 +72,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
     }
 
     Parser_class_var_dec var_dec;
+    var_dec.vars_count = 0;
 
     consume_atom();
     if (current_atom.keyword == TK_KEYWORD_STATIC) {
@@ -102,9 +102,21 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
         current_atom.type == TK_TYPE_IDENTIFIER,
         "Expected variable name in declaration"
     );
-    var_dec.name = current_atom.value;
+    var_dec.vars_names[0] = current_atom.value;
+    var_dec.vars_count++;
     
-    consume_atom();
+    consume_atom(); 
+    while (current_atom.symbol == TK_SYMBOL_COMMA) {
+        consume_atom();
+        expect(
+            current_atom.type == TK_TYPE_IDENTIFIER,
+            "Expected variable name in declaration"
+        );
+        var_dec.vars_names[var_dec.vars_count] = current_atom.value;
+        var_dec.vars_count++;
+        consume_atom();
+    }
+
     expect(
         current_atom.symbol == TK_SYMBOL_SEMICOLON,
         "Expected ';' at end of variable declaration."

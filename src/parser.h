@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include "tokenizer.h"
 
-#define PARSER_MAX_C_VARS 100
-#define PARSER_MAX_C_FUNCS 100
+#define PARSER_MAX_C_VARS       100
+#define PARSER_MAX_C_FUNCS      100
+#define PARSER_MAX_VARS_LISTED  100
 
 typedef enum {
     PARSER_VAR_STATIC,
@@ -13,7 +14,8 @@ typedef enum {
 typedef struct {
     Parser_var_scope scope;
     char *type_name;
-    char *name; // TODO: Allow for multiple identifiers.
+    short vars_count;
+    char* vars_names[PARSER_MAX_VARS_LISTED];
 } Parser_class_var_dec;
 
 typedef struct {
