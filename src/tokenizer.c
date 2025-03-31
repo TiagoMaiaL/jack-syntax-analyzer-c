@@ -149,14 +149,12 @@ static bool tokenize_whitespace(Tokenizer_atom *atom)
     }
 
     int len;
-    char ch;
     char *value;
 
     len = 0;
 
     while(isspace(peak())) {
         len++;
-        ch = get_char();
     }
 
     if (len == 0) {
@@ -222,7 +220,6 @@ static Tokenizer_symbol get_symbol(char ch) {
 static bool tokenize_comment(Tokenizer_atom *atom)
 {
     char ch;
-    bool is_comment_start;
     bool is_line_comment;
     int comment_len;
 

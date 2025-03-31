@@ -13,6 +13,7 @@ source_files=(
     '../src/main.c'
     '../src/file-handler.c'
     '../src/tokenizer.c'
+    '../src/parser.c'
 )
 
 files=("${source_files[@]}")

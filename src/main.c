@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "file-handler.h"
-#include "tokenizer.h"
+#include "parser.h"
 
 #define SUCCESS_CODE    0
 #define ERROR_CODE      -1
@@ -27,15 +27,8 @@ int main(int argc, char **argv)
         return ERROR_CODE;
     }
 
-    Tokenizer_atom atom;
-
-    tokenizer_start(file_handle);
-    atom = tokenizer_next();
-
-    printf("atom val = %s\n", atom.value);
-    printf("atom type = %d\n", atom.type);
-    printf("atom symbol = %d\n", atom.symbol);
-
+    Parser_jack_syntax file_syntax = parser_parse(file_handle);
+    
     return SUCCESS_CODE;
 }
 

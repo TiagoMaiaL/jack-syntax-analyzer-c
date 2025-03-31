@@ -11,6 +11,7 @@ cd $artifacts
 source_files=(
     '../src/tokenizer.c'
     '../src/file-handler.c'
+    '../src/parser.c'
 )
 test_files=(
     '../tests/main.c'
