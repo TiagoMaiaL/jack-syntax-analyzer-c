@@ -28,6 +28,7 @@ int main(int argc, char **argv)
     }
 
     Parser_jack_syntax file_syntax = parser_parse(file_handle);
+    printf("Parsing successful!\n");
     
     return SUCCESS_CODE;
 }
