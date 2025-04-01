@@ -17,6 +17,7 @@ test_files=(
     '../tests/main.c'
     '../tests/test.c'
     '../tests/test-tokenizer.c'
+    '../tests/test-parser.c'
 )
 files=("${source_files[@]}" "${test_files[@]}")
 

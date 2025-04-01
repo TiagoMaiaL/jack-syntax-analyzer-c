@@ -17,7 +17,6 @@ static void test_tokenizing_int_literals();
 static void test_tokenizing_str_literals();
 static void test_tokenizing_comments();
 static void test_tokenizing_simple_file();
-static char *test_file_content;
 static void prepare_test_file(const char *file_content);
 static void erase_test_file();
 
