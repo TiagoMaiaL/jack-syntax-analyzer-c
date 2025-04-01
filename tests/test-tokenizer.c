@@ -3,6 +3,7 @@
 #include <string.h>
 #include "test-tokenizer.h"
 #include "test.h"
+#include "utils.h"
 #include "../src/tokenizer.h"
 
 #define TEST_FILE_NAME "tokenizer_test_file.jack"
@@ -17,8 +18,6 @@ static void test_tokenizing_int_literals();
 static void test_tokenizing_str_literals();
 static void test_tokenizing_comments();
 static void test_tokenizing_simple_file();
-static void prepare_test_file(const char *file_content);
-static void erase_test_file();
 
 void test_tokenizer()
 {
@@ -38,7 +37,7 @@ void test_tokenizer()
 
 static void test_tokenizing_whitespace()
 {
-    prepare_test_file(" ");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, " ");
     tokenizer_start(test_file_handle); 
 
     Tokenizer_atom atom = tokenizer_next();
@@ -49,7 +48,7 @@ static void test_tokenizing_whitespace()
     free(atom.value);
 
 
-    prepare_test_file(" \t  class");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, " \t  class");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -67,12 +66,12 @@ static void test_tokenizing_whitespace()
 
     tst_true(tokenizer_finished());
 
-    erase_test_file();
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 static void test_tokenizing_symbols()
 {
-    prepare_test_file("{]};.");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "{]};.");
     tokenizer_start(test_file_handle); 
 
     tst_false(tokenizer_finished());
@@ -113,12 +112,12 @@ static void test_tokenizing_symbols()
 
     tst_true(tokenizer_finished());
 
-    erase_test_file();
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 static void test_tokenizing_keywords()
 {
-    prepare_test_file("null");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "null");
     tokenizer_start(test_file_handle); 
 
     Tokenizer_atom atom = tokenizer_next();
@@ -128,7 +127,7 @@ static void test_tokenizing_keywords()
     tst_true(strcmp(atom.value, "null") == 0);
     tst_true(atom.is_complete);
 
-    prepare_test_file("int");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "int");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -136,7 +135,7 @@ static void test_tokenizing_keywords()
     tst_true(atom.type == TK_TYPE_KEYWORD);
     tst_true(strcmp(atom.value, "int") == 0);
 
-    prepare_test_file("int.");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "int.");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -152,12 +151,12 @@ static void test_tokenizing_keywords()
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
 
-    erase_test_file();
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 static void test_tokenizing_identifiers()
 {
-    prepare_test_file("nullable");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "nullable");
     tokenizer_start(test_file_handle); 
 
     Tokenizer_atom atom = tokenizer_next();
@@ -167,7 +166,7 @@ static void test_tokenizing_identifiers()
     tst_true(atom.is_complete);
 
 
-    prepare_test_file("_asdf");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "_asdf");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -176,7 +175,7 @@ static void test_tokenizing_identifiers()
     tst_true(atom.is_complete);
 
 
-    prepare_test_file("__7__123");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "__7__123");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -185,7 +184,7 @@ static void test_tokenizing_identifiers()
     tst_true(atom.is_complete);
 
 
-    prepare_test_file("__7__;");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "__7__;");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -203,12 +202,12 @@ static void test_tokenizing_identifiers()
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
 
-    erase_test_file();
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 static void test_tokenizing_int_literals()
 {
-    prepare_test_file("1234");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "1234");
     tokenizer_start(test_file_handle); 
 
     Tokenizer_atom atom = tokenizer_next();
@@ -218,7 +217,7 @@ static void test_tokenizing_int_literals()
     tst_true(atom.is_complete);
 
 
-    prepare_test_file("0");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "0");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -227,7 +226,7 @@ static void test_tokenizing_int_literals()
     tst_true(strcmp(atom.value, "0") == 0);
     tst_true(atom.is_complete);
 
-    prepare_test_file("33");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "33");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -236,7 +235,7 @@ static void test_tokenizing_int_literals()
     tst_true(strcmp(atom.value, "33") == 0);
     tst_true(atom.is_complete);
 
-    prepare_test_file("x=143+59219;");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "x=143+59219;");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -270,12 +269,12 @@ static void test_tokenizing_int_literals()
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
 
-    erase_test_file();
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 static void test_tokenizing_str_literals()
 {
-    prepare_test_file("\"\"");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "\"\"");
     tokenizer_start(test_file_handle); 
 
     Tokenizer_atom atom = tokenizer_next();
@@ -285,7 +284,7 @@ static void test_tokenizing_str_literals()
     tst_true(atom.is_complete);
 
 
-    prepare_test_file("\"testing str literal\"");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "\"testing str literal\"");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -294,7 +293,7 @@ static void test_tokenizing_str_literals()
     tst_true(atom.is_complete);
 
 
-    prepare_test_file("\"asdf;NULL,!+=asdfkjh:::121313__\"");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "\"asdf;NULL,!+=asdfkjh:::121313__\"");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -303,7 +302,7 @@ static void test_tokenizing_str_literals()
     tst_true(atom.is_complete);
 
 
-    prepare_test_file("x=\"test\";");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "x=\"test\";");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -324,7 +323,7 @@ static void test_tokenizing_str_literals()
     tst_true(strcmp(atom.value, ";") == 0);
 
 
-    prepare_test_file("\"asdf\n");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "\"asdf\n");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -332,7 +331,7 @@ static void test_tokenizing_str_literals()
     tst_true(!atom.is_complete);
     tst_true(strcmp(atom.value, "\"asdf") == 0);
 
-    prepare_test_file("\"asdf");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "\"asdf");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -344,13 +343,13 @@ static void test_tokenizing_str_literals()
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
 
-    erase_test_file();
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 static void test_tokenizing_comments()
 {
     // one-line comment
-    prepare_test_file("// asdf asdf\n");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "// asdf asdf\n");
     tokenizer_start(test_file_handle); 
 
     Tokenizer_atom atom = tokenizer_next();
@@ -360,7 +359,7 @@ static void test_tokenizing_comments()
     free(atom.value);
 
     // symbol + one-line comment + symbol
-    prepare_test_file(";// asdf asdf\n.");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, ";// asdf asdf\n.");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -377,7 +376,7 @@ static void test_tokenizing_comments()
     free(atom.value);
 
     // block comment (inline)
-    prepare_test_file("/* asdf */");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "/* asdf */");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -387,7 +386,7 @@ static void test_tokenizing_comments()
     free(atom.value);
 
     // block comment (multi-line)
-    prepare_test_file("/* asdf\nasdf\nasdf */");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "/* asdf\nasdf\nasdf */");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -397,7 +396,7 @@ static void test_tokenizing_comments()
     free(atom.value);
 
     // symbol + block comment + symbol
-    prepare_test_file("./* asdf\nasdf*//");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "./* asdf\nasdf*//");
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -415,7 +414,7 @@ static void test_tokenizing_comments()
     free(atom.value);
     
     // unfinished block comment
-    prepare_test_file("/* asdf");
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "/* asdf");
     tokenizer_start(test_file_handle); 
    
     atom = tokenizer_next();
@@ -428,7 +427,7 @@ static void test_tokenizing_comments()
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
 
-    erase_test_file();
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 static void test_tokenizing_simple_file()
@@ -442,7 +441,7 @@ static void test_tokenizing_simple_file()
                         "}";
     Tokenizer_atom atom;
 
-    prepare_test_file(source_code);
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, source_code);
     tokenizer_start(test_file_handle); 
 
     atom = tokenizer_next();
@@ -567,26 +566,6 @@ static void test_tokenizing_simple_file()
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
 
-    erase_test_file();
-}
-
-static void prepare_test_file(const char *file_content)
-{
-    test_file_handle = fopen(TEST_FILE_NAME, "wa");
-
-    if (fputs(file_content, test_file_handle) == EOF) {
-        abort();
-    }
-    fclose(test_file_handle);
-
-    fopen(TEST_FILE_NAME, "r");
-}
-
-static void erase_test_file()
-{
-    if (test_file_handle != NULL) {
-        fclose(test_file_handle);
-    }
-    remove(TEST_FILE_NAME);
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
