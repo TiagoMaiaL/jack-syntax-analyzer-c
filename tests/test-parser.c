@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "test.h"
 #include "test-parser.h"
 #include "utils.h"
+#include "../src/parser.h"
 
 #define TEST_FILE_NAME "parser_test_file.jack"
 
@@ -29,7 +31,17 @@ void test_parser()
 
 void test_parsing_empty_class()
 {
+    test_file_handle = prepare_test_file(
+        TEST_FILE_NAME, 
+        "class Main {}"
+    );
 
+    Parser_class_dec class = parser_parse(test_file_handle).class_dec;
+    tst_true(strcmp(class.name, "Main") == 0);
+    tst_true(class.vars_count == 0);
+    tst_true(class.funcs_count == 0);
+
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 void test_parsing_class_with_vars()

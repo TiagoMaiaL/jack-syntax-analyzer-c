@@ -37,6 +37,7 @@ static Parser_class_dec parse_class_dec()
 {
     consume_atom();
     expect(current_atom.keyword == TK_KEYWORD_CLASS, "'class' keyword expected");
+    // TODO: Include calls to free unused token values.
 
     Parser_class_dec class_dec;
     class_dec.vars_count = 0;
@@ -44,7 +45,7 @@ static Parser_class_dec parse_class_dec()
 
     consume_atom(); 
     expect(current_atom.type == TK_TYPE_IDENTIFIER, "Class name expected"); 
-    class_dec.identifier = current_atom;
+    class_dec.name = current_atom.value;
 
     consume_atom();
     expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' expected");

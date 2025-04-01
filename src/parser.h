@@ -23,7 +23,7 @@ typedef struct {
 } Parser_subroutine_dec;
 
 typedef struct {
-    Tokenizer_atom identifier;
+    const char *name;
     short vars_count;
     Parser_class_var_dec vars[PARSER_MAX_C_VARS];
     short funcs_count;
