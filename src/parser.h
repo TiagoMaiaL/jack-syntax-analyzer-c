@@ -4,6 +4,7 @@
 #define PARSER_MAX_C_VARS       100
 #define PARSER_MAX_C_FUNCS      100
 #define PARSER_MAX_VARS_LISTED  100
+#define PARSER_MAX_PARAMS       100
 
 typedef enum {
     PARSER_VAR_STATIC,
@@ -19,11 +20,26 @@ typedef struct {
 } Parser_class_var_dec;
 
 typedef struct {
+    char *type_name;
+    char *name;
+} Parser_param;
 
+typedef enum {
+    PARSER_FUNC_STATIC,
+    PARSER_FUNC_CONSTRUCTOR,
+    PARSER_FUNC_METHOD
+} Parser_func_scope;
+
+typedef struct {
+    Parser_func_scope scope;
+    char *type_name;
+    char *name;
+    short params_count;
+    Parser_param params[PARSER_MAX_PARAMS];
 } Parser_subroutine_dec;
 
 typedef struct {
-    const char *name;
+    char *name;
     short vars_count;
     Parser_class_var_dec vars[PARSER_MAX_C_VARS];
     short funcs_count;
@@ -33,10 +49,6 @@ typedef struct {
 typedef struct {
     Parser_class_dec class_dec;
 } Parser_jack_syntax; 
-
-typedef struct {
-
-} Parser_params_list;
 
 typedef struct {
 
