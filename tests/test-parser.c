@@ -46,7 +46,28 @@ void test_parsing_empty_class()
 
 void test_parsing_class_with_vars()
 {
+    test_file_handle = prepare_test_file(
+        TEST_FILE_NAME, 
+        "class Main {\n"
+        "  static int count;\n"
+        "  field bool flag_1, flag_2, flag_3;\n"
+        "}"
+    );
 
+    Parser_class_dec class = parser_parse(test_file_handle).class_dec;
+
+    tst_true(class.vars_count == 2);
+    tst_true(strcmp(class.vars[0].type_name, "int") == 0);
+    tst_true(strcmp(class.vars[0].vars_names[0], "count") == 0);
+    tst_true(class.vars[0].vars_count == 1);
+
+    tst_true(strcmp(class.vars[1].type_name, "bool") == 0);
+    tst_true(strcmp(class.vars[1].vars_names[0], "flag_1") == 0);
+    tst_true(strcmp(class.vars[1].vars_names[1], "flag_2") == 0);
+    tst_true(strcmp(class.vars[1].vars_names[2], "flag_3") == 0);
+    tst_true(class.vars[1].vars_count == 3);
+
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 void test_parsing_class_with_empty_funcs()
