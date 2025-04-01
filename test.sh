@@ -31,7 +31,7 @@ for file in "${files[@]}"; do
     args+=$file' '
 done
 
-if clang -o _test $args; then
+if clang -g -Wall -o _test $args; then
     ./_test
 fi
 

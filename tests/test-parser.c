@@ -7,8 +7,6 @@
 
 static FILE *test_file_handle = NULL;
 
-// TODO: Compile tests with warnings.
-
 static void prepare_test_file(const char *file_content);
 static void erase_test_file();
 
