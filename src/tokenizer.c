@@ -338,6 +338,11 @@ static Tokenizer_keyword get_keyword(char **val_ref)
 
     if (ch != EOF && !isalpha(ch)) {
         seek_back(1);
+
+        if (ch == '_' || isdigit(ch)) {
+            seek_back(keyword_len);
+            return TK_KEYWORD_UNDEFINED;
+        }
     }
 
     if (keyword_len == 0) {

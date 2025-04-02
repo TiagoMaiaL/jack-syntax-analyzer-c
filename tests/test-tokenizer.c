@@ -166,6 +166,24 @@ static void test_tokenizing_identifiers()
     tst_true(atom.is_complete);
 
 
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "char1");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_IDENTIFIER);
+    tst_true(strcmp(atom.value, "char1") == 0);
+    tst_true(atom.is_complete);
+
+
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "char_");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.type == TK_TYPE_IDENTIFIER);
+    tst_true(strcmp(atom.value, "char_") == 0);
+    tst_true(atom.is_complete);
+
+
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "_asdf");
     tokenizer_start(test_file_handle); 
 
