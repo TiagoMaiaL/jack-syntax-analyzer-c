@@ -38,7 +38,7 @@ static Parser_class_dec parse_class_dec()
 {
     consume_atom();
     expect(current_atom.keyword == TK_KEYWORD_CLASS, "'class' keyword expected");
-    // TODO: Include calls to free unused token values.
+    free(current_atom.value);
 
     Parser_class_dec class_dec;
     class_dec.vars_count = 0;
@@ -50,12 +50,14 @@ static Parser_class_dec parse_class_dec()
 
     consume_atom();
     expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' symbol expected");
+    free(current_atom.value);
     
     parse_class_vars_dec(&class_dec, 0);
     parse_subroutines(&class_dec, 0);
 
     consume_atom();
     expect(current_atom.symbol == TK_SYMBOL_R_CURLY, "'}' symbol expected");
+    free(current_atom.value);
 
     return class_dec;
 }
@@ -68,6 +70,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
     Tokenizer_atom peak = peak_atom();
     has_var_decs = peak.keyword == TK_KEYWORD_STATIC || 
                    peak.keyword == TK_KEYWORD_FIELD;
+    free(peak.value);
 
     if (!has_var_decs) {
         return;
@@ -84,6 +87,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
     } else {
         exit_parsing("Expected a valid scope for the variable declaration");
     }
+    free(current_atom.value);
 
     consume_atom();
     expect(
@@ -104,13 +108,16 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
     consume_atom(); 
     while (current_atom.symbol == TK_SYMBOL_COMMA) {
         consume_atom();
+
         expect(
             current_atom.type == TK_TYPE_IDENTIFIER,
             "Expected variable name in declaration"
         );
         var_dec.vars_names[var_dec.vars_count] = current_atom.value;
         var_dec.vars_count++;
+
         consume_atom();
+        free(current_atom.value);
     }
 
     expect(
@@ -133,6 +140,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
     has_func_decs = peak.keyword == TK_KEYWORD_FUNCTION || 
                     peak.keyword == TK_KEYWORD_CONSTRUCTOR ||
                     peak.keyword == TK_KEYWORD_METHOD;
+    free(peak.value);
 
     if (!has_func_decs) {
         return;
@@ -152,6 +160,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
     } else {
         exit_parsing("Undefined scope for function declaration");
     }
+    free(current_atom.value);
 
     consume_atom();
     expect(
@@ -175,6 +184,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
         "Expected left curly brace '{' at beginning of "
         "subroutine's body declaration."
     );
+    free(current_atom.value);
 
     parse_var_decs(&subroutine, 0);
     parse_statements(&subroutine);
@@ -185,6 +195,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
         "Expected right curly brace '}' at end of "
         "subroutine's body declaration."
     );
+    free(current_atom.value);
 
     class->subroutines[func_i] = subroutine;
     func_i++;
@@ -201,6 +212,7 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
         "Expected opening parenthesis for parameter list " 
         "'(' in subroutine declaration"
     );
+    free(current_atom.value);
 
     consume_atom();
     while (is_type(current_atom)) {
@@ -219,6 +231,7 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
 
         consume_atom();
         if (current_atom.symbol == TK_SYMBOL_COMMA) {
+            free(current_atom.value);
             consume_atom();
         }
     }
@@ -228,15 +241,20 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
         "Expected closing parenthesis ')' at "
         "end of parameter list in subroutine declaration"
     );
+    free(current_atom.value);
 }
 
 static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i)
 {
-    if (peak_atom().keyword != TK_KEYWORD_VAR) {
+    Tokenizer_atom peak = peak_atom();
+    free(peak.value);
+
+    if (peak.keyword != TK_KEYWORD_VAR) {
         return;
     }
 
     consume_atom();
+    free(current_atom.value);
     
     Parser_var_dec var;
     var.vars_count = 0;
@@ -261,6 +279,7 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i)
         consume_atom();
 
         if (current_atom.symbol == TK_SYMBOL_COMMA) {
+            free(current_atom.value);
             consume_atom();
         }
     }
@@ -269,6 +288,7 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i)
         current_atom.symbol == TK_SYMBOL_SEMICOLON,
         "Expected semicolon ';' at end of variable declaration"
     );
+    free(current_atom.value);
 
     subroutine->vars_count++;
     subroutine->vars[var_i] = var;
@@ -282,7 +302,6 @@ static void parse_statements(Parser_subroutine_dec *subroutine)
 
 }
 
-// TODO: Add param to determine if value should be freed.
 static Tokenizer_atom consume_atom()
 {
     Tokenizer_atom atom;
