@@ -118,7 +118,34 @@ void test_parsing_class_with_empty_funcs()
 
 void test_parsing_func_body()
 {
+     test_file_handle = prepare_test_file(
+        TEST_FILE_NAME, 
+        "class Bar {\n"
+        "  method int test(char arg1) {\n"
+        "    var int someInt;\n"
+        "    var char char1, char_2, char__3;\n"
+        "  }\n"
+        "}"
+    );
 
+    Parser_class_dec class = parser_parse(test_file_handle).class_dec;
+    Parser_subroutine_dec subroutine = class.subroutines[0];
+
+    tst_true(subroutine.vars_count == 2);
+
+    Parser_var_dec someInt = subroutine.vars[0];
+    tst_true(strcmp(someInt.type_name, "int") == 0);
+    tst_true(someInt.vars_count == 1);
+    tst_true(strcmp(someInt.vars_names[0], "someInt") == 0);
+    
+    Parser_var_dec chars_listed = subroutine.vars[1];
+    tst_true(strcmp(chars_listed.type_name, "char") == 0);
+    tst_true(chars_listed.vars_count == 3);
+    tst_true(strcmp(chars_listed.vars_names[0], "char1") == 0);
+    tst_true(strcmp(chars_listed.vars_names[1], "char_2") == 0);
+    tst_true(strcmp(chars_listed.vars_names[2], "char__3") == 0);
+
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 void test_parsing_expr()

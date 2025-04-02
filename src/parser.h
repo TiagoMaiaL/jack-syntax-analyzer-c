@@ -1,23 +1,31 @@
 #include <stdio.h>
 #include "tokenizer.h"
 
+// TODO: Create a dynamic array.
 #define PARSER_MAX_C_VARS       100
 #define PARSER_MAX_C_FUNCS      100
 #define PARSER_MAX_VARS_LISTED  100
 #define PARSER_MAX_PARAMS       100
+#define PARSER_MAX_STATEMENTS   1000
+#define PARSER_MAX_VARS         1000
 
 typedef enum {
     PARSER_VAR_STATIC,
     PARSER_VAR_FIELD,
-    PARSER_VAR_LOCAL
-} Parser_var_scope;
+} Parser_class_var_scope;
 
 typedef struct {
-    Parser_var_scope scope;
+    Parser_class_var_scope scope;
     char *type_name;
     short vars_count;
     char* vars_names[PARSER_MAX_VARS_LISTED];
 } Parser_class_var_dec;
+
+typedef struct {
+    char *type_name;
+    short vars_count;
+    char* vars_names[PARSER_MAX_VARS_LISTED];
+} Parser_var_dec;
 
 typedef struct {
     char *type_name;
@@ -28,7 +36,7 @@ typedef enum {
     PARSER_FUNC_STATIC,
     PARSER_FUNC_CONSTRUCTOR,
     PARSER_FUNC_METHOD
-} Parser_func_scope;
+} Parser_func_scope; // TODO: rename to Parser_subroutine_scope.
 
 typedef struct {
     Parser_func_scope scope;
@@ -36,6 +44,8 @@ typedef struct {
     char *name;
     short params_count;
     Parser_param params[PARSER_MAX_PARAMS];
+    short vars_count;
+    Parser_var_dec vars[PARSER_MAX_VARS];
 } Parser_subroutine_dec;
 
 typedef struct {
@@ -49,10 +59,6 @@ typedef struct {
 typedef struct {
     Parser_class_dec class_dec;
 } Parser_jack_syntax; 
-
-typedef struct {
-
-} Parser_var_dec;
 
 typedef struct {
 

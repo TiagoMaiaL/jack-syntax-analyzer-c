@@ -9,8 +9,8 @@ static Parser_class_dec parse_class_dec();
 static void parse_class_vars_dec(Parser_class_dec *class, short var_i);
 static void parse_subroutines(Parser_class_dec *class, short func_i);
 static void parse_params_list(Parser_subroutine_dec *subroutine);
-static void parse_var_dec();
-static void parse_statements();
+static void parse_var_decs(Parser_subroutine_dec *subroutine);
+static void parse_statements(Parser_subroutine_dec *subroutine);
 static void parse_do();
 static void parse_let();
 static void parse_while();
@@ -174,7 +174,8 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
         "subroutine's body declaration."
     );
 
-    // TODO: Parse subroutine's body.
+    parse_var_decs(&subroutine);
+    parse_statements(&subroutine);
 
     consume_atom();
     expect(
@@ -225,6 +226,16 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
         "Expected closing parenthesis ')' at "
         "end of parameter list in subroutine declaration"
     );
+}
+
+static void parse_var_decs(Parser_subroutine_dec *subroutine)
+{
+    // TODO:
+}
+
+static void parse_statements(Parser_subroutine_dec *subroutine)
+{
+
 }
 
 // TODO: Add param to determine if value should be freed.
