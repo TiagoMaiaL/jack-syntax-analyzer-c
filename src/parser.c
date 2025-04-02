@@ -7,9 +7,8 @@ static Tokenizer_atom current_atom;
 
 static Parser_class_dec parse_class_dec();
 static void parse_class_vars_dec(Parser_class_dec *class, short var_i);
-static void parse_type();
-static void parse_class_subroutines();
-static void parse_param_list();
+static void parse_subroutines(Parser_class_dec *class, short func_i);
+static void parse_params_list(Parser_subroutine_dec *subroutine);
 static void parse_var_dec();
 static void parse_statements();
 static void parse_do();
@@ -23,6 +22,7 @@ static void parse_expression_list();
 static Tokenizer_atom consume_atom();
 static Tokenizer_atom peak_atom();
 static void expect(bool expression, char *failure_msg);
+static bool is_type(Tokenizer_atom atom);
 static void exit_parsing(char *msg);
 
 Parser_jack_syntax parser_parse(FILE *source) {
@@ -41,7 +41,7 @@ static Parser_class_dec parse_class_dec()
 
     Parser_class_dec class_dec;
     class_dec.vars_count = 0;
-    class_dec.funcs_count = 0; 
+    class_dec.subroutines_count = 0; 
 
     consume_atom(); 
     expect(current_atom.type == TK_TYPE_IDENTIFIER, "Class name expected"); 
@@ -51,7 +51,7 @@ static Parser_class_dec parse_class_dec()
     expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' expected");
     
     parse_class_vars_dec(&class_dec, 0);
-    // TODO: Parse class functions:
+    parse_subroutines(&class_dec, 0);
 
     consume_atom();
     expect(current_atom.symbol == TK_SYMBOL_R_CURLY, "'}' expected");
@@ -86,13 +86,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
 
     consume_atom();
     expect(
-        current_atom.value != NULL &&
-        (
-            current_atom.keyword == TK_KEYWORD_INT ||
-            current_atom.keyword == TK_KEYWORD_CHAR ||
-            current_atom.keyword == TK_KEYWORD_BOOLEAN ||
-            current_atom.type == TK_TYPE_IDENTIFIER
-        ),
+        is_type(current_atom),
         "Expected type in variable declaration"
     );
     var_dec.type_name = current_atom.value;
@@ -130,6 +124,110 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
     parse_class_vars_dec(class, var_i);
 }
 
+static void parse_subroutines(Parser_class_dec *class, short func_i)
+{
+    bool has_func_decs;
+
+    Tokenizer_atom peak = peak_atom();
+    has_func_decs = peak.keyword == TK_KEYWORD_FUNCTION || 
+                    peak.keyword == TK_KEYWORD_CONSTRUCTOR ||
+                    peak.keyword == TK_KEYWORD_METHOD;
+
+    if (!has_func_decs) {
+        return;
+    }
+
+    Parser_subroutine_dec subroutine;
+    subroutine.params_count = 0;
+
+    consume_atom();
+    if (current_atom.keyword == TK_KEYWORD_FUNCTION) {
+        subroutine.scope = PARSER_FUNC_STATIC;
+    } else if (current_atom.keyword == TK_KEYWORD_CONSTRUCTOR) {
+        subroutine.scope = PARSER_FUNC_CONSTRUCTOR;
+    } else if (current_atom.keyword == TK_KEYWORD_METHOD) {
+        subroutine.scope = PARSER_FUNC_METHOD;
+    } else {
+        exit_parsing("Undefined scope for function declaration");
+    }
+
+    consume_atom();
+    expect(
+        is_type(current_atom),
+        "Expected return type in subroutine declaration"
+    );
+    subroutine.type_name = current_atom.value;
+
+    consume_atom();
+    expect(
+        current_atom.type == TK_TYPE_IDENTIFIER,
+        "Expected subroutine name in declaration"
+    );
+    subroutine.name = current_atom.value; 
+
+    parse_params_list(&subroutine);
+
+    consume_atom();
+    expect(
+        current_atom.symbol == TK_SYMBOL_L_CURLY,
+        "Expected left curly brace '{' at beginning of "
+        "subroutine's body declaration."
+    );
+
+    // TODO: Parse subroutine's body.
+
+    consume_atom();
+    expect(
+        current_atom.symbol == TK_SYMBOL_R_CURLY,
+        "Expected right curly brace '}' at end of "
+        "subroutine's body declaration."
+    );
+
+    class->subroutines[func_i] = subroutine;
+    func_i++;
+    class->subroutines_count = func_i;
+    
+    parse_subroutines(class, func_i);
+}
+
+static void parse_params_list(Parser_subroutine_dec *subroutine)
+{
+    consume_atom();
+    expect(
+        current_atom.symbol == TK_SYMBOL_L_PAREN,
+        "Expected opening parenthesis for parameter list " 
+        "'(' in subroutine declaration"
+    );
+
+    consume_atom();
+    while (is_type(current_atom)) {
+        Parser_param param;
+        param.type_name = current_atom.value;
+
+        consume_atom();
+        expect(
+            current_atom.type == TK_TYPE_IDENTIFIER,
+            "Expected parameter name in function declaration"
+        );
+        param.name = current_atom.value;
+
+        subroutine->params[subroutine->params_count] = param;
+        subroutine->params_count++;
+
+        consume_atom();
+        if (current_atom.symbol == TK_SYMBOL_COMMA) {
+            consume_atom();
+        }
+    }
+
+    expect(
+        current_atom.symbol == TK_SYMBOL_R_PAREN,
+        "Expected closing parenthesis ')' at "
+        "end of parameter list in subroutine declaration"
+    );
+}
+
+// TODO: Add param to determine if value should be freed.
 static Tokenizer_atom consume_atom()
 {
     Tokenizer_atom atom;
@@ -192,11 +290,23 @@ static void expect(bool expression, char *failure_msg)
     error_output[0] = '\0';
 
     strcat(error_output, EXPECT_FAIL_MSG);
+    // TODO: Include current token value in message.
     strcat(error_output, failure_msg);
 
     if (!expression) {
         exit_parsing(error_output);
     }
+}
+
+static bool is_type(Tokenizer_atom atom)
+{
+    return atom.value != NULL && (
+        atom.keyword == TK_KEYWORD_INT ||
+        atom.keyword == TK_KEYWORD_CHAR ||
+        atom.keyword == TK_KEYWORD_BOOLEAN ||
+        atom.keyword == TK_KEYWORD_VOID ||
+        atom.type == TK_TYPE_IDENTIFIER
+    );
 }
 
 static void exit_parsing(char *msg)

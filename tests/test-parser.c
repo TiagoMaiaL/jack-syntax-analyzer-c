@@ -39,7 +39,7 @@ void test_parsing_empty_class()
     Parser_class_dec class = parser_parse(test_file_handle).class_dec;
     tst_true(strcmp(class.name, "Main") == 0);
     tst_true(class.vars_count == 0);
-    tst_true(class.funcs_count == 0);
+    tst_true(class.subroutines_count == 0);
 
     erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
@@ -86,32 +86,32 @@ void test_parsing_class_with_empty_funcs()
 
     Parser_class_dec class = parser_parse(test_file_handle).class_dec;
 
-    tst_true(class.funcs_count == 3);
+    tst_true(class.subroutines_count == 3);
 
-    tst_true(class.funcs[0].scope == PARSER_FUNC_STATIC);
-    tst_true(strcmp(class.funcs[0].type_name, "void") == 0);
-    tst_true(strcmp(class.funcs[0].name, "foo") == 0);
-    tst_true(class.funcs[0].params_count == 2);
-    tst_true(strcmp(class.funcs[0].params[0].type_name, "int") == 0);
-    tst_true(strcmp(class.funcs[0].params[0].name, "arg1") == 0);
-    tst_true(strcmp(class.funcs[0].params[1].type_name, "int") == 0);
-    tst_true(strcmp(class.funcs[0].params[1].name, "arg2") == 0);
+    tst_true(class.subroutines[0].scope == PARSER_FUNC_STATIC);
+    tst_true(strcmp(class.subroutines[0].type_name, "void") == 0);
+    tst_true(strcmp(class.subroutines[0].name, "foo") == 0);
+    tst_true(class.subroutines[0].params_count == 2);
+    tst_true(strcmp(class.subroutines[0].params[0].type_name, "int") == 0);
+    tst_true(strcmp(class.subroutines[0].params[0].name, "arg1") == 0);
+    tst_true(strcmp(class.subroutines[0].params[1].type_name, "int") == 0);
+    tst_true(strcmp(class.subroutines[0].params[1].name, "arg2") == 0);
    
-    tst_true(class.funcs[1].scope == PARSER_FUNC_CONSTRUCTOR);
-    tst_true(strcmp(class.funcs[1].type_name, "Bar") == 0);
-    tst_true(strcmp(class.funcs[1].name, "new") == 0);
-    tst_true(class.funcs[1].params_count == 2);
-    tst_true(strcmp(class.funcs[1].params[0].type_name, "int") == 0);
-    tst_true(strcmp(class.funcs[1].params[0].name, "age") == 0);
-    tst_true(strcmp(class.funcs[1].params[1].type_name, "boolean") == 0);
-    tst_true(strcmp(class.funcs[1].params[1].name, "some_flag") == 0);
+    tst_true(class.subroutines[1].scope == PARSER_FUNC_CONSTRUCTOR);
+    tst_true(strcmp(class.subroutines[1].type_name, "Bar") == 0);
+    tst_true(strcmp(class.subroutines[1].name, "new") == 0);
+    tst_true(class.subroutines[1].params_count == 2);
+    tst_true(strcmp(class.subroutines[1].params[0].type_name, "int") == 0);
+    tst_true(strcmp(class.subroutines[1].params[0].name, "age") == 0);
+    tst_true(strcmp(class.subroutines[1].params[1].type_name, "boolean") == 0);
+    tst_true(strcmp(class.subroutines[1].params[1].name, "some_flag") == 0);
 
-    tst_true(class.funcs[2].scope == PARSER_FUNC_METHOD);
-    tst_true(strcmp(class.funcs[2].type_name, "int") == 0);
-    tst_true(strcmp(class.funcs[2].name, "test") == 0);
-    tst_true(class.funcs[2].params_count == 1);
-    tst_true(strcmp(class.funcs[2].params[0].type_name, "char") == 0);
-    tst_true(strcmp(class.funcs[2].params[0].name, "arg1") == 0);
+    tst_true(class.subroutines[2].scope == PARSER_FUNC_METHOD);
+    tst_true(strcmp(class.subroutines[2].type_name, "int") == 0);
+    tst_true(strcmp(class.subroutines[2].name, "test") == 0);
+    tst_true(class.subroutines[2].params_count == 1);
+    tst_true(strcmp(class.subroutines[2].params[0].type_name, "char") == 0);
+    tst_true(strcmp(class.subroutines[2].params[0].name, "arg1") == 0);
 
     erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
