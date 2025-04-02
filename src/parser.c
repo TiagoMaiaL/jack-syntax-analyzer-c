@@ -9,7 +9,7 @@ static Parser_class_dec parse_class_dec();
 static void parse_class_vars_dec(Parser_class_dec *class, short var_i);
 static void parse_subroutines(Parser_class_dec *class, short func_i);
 static void parse_params_list(Parser_subroutine_dec *subroutine);
-static void parse_var_decs(Parser_subroutine_dec *subroutine);
+static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i);
 static void parse_statements(Parser_subroutine_dec *subroutine);
 static void parse_do();
 static void parse_let();
@@ -30,6 +30,7 @@ Parser_jack_syntax parser_parse(FILE *source) {
 
     Parser_jack_syntax jack_syntax;
     jack_syntax.class_dec = parse_class_dec();
+
     return jack_syntax;
 }
 
@@ -48,13 +49,13 @@ static Parser_class_dec parse_class_dec()
     class_dec.name = current_atom.value;
 
     consume_atom();
-    expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' expected");
+    expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' symbol expected");
     
     parse_class_vars_dec(&class_dec, 0);
     parse_subroutines(&class_dec, 0);
 
     consume_atom();
-    expect(current_atom.symbol == TK_SYMBOL_R_CURLY, "'}' expected");
+    expect(current_atom.symbol == TK_SYMBOL_R_CURLY, "'}' symbol expected");
 
     return class_dec;
 }
@@ -139,6 +140,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
 
     Parser_subroutine_dec subroutine;
     subroutine.params_count = 0;
+    subroutine.vars_count = 0;
 
     consume_atom();
     if (current_atom.keyword == TK_KEYWORD_FUNCTION) {
@@ -174,7 +176,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
         "subroutine's body declaration."
     );
 
-    parse_var_decs(&subroutine);
+    parse_var_decs(&subroutine, 0);
     parse_statements(&subroutine);
 
     consume_atom();
@@ -228,9 +230,51 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
     );
 }
 
-static void parse_var_decs(Parser_subroutine_dec *subroutine)
+static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i)
 {
-    // TODO:
+    if (peak_atom().keyword != TK_KEYWORD_VAR) {
+        return;
+    }
+
+    consume_atom();
+    
+    Parser_var_dec var;
+    var.vars_count = 0;
+
+    consume_atom();
+    expect(
+        is_type(current_atom) && 
+        current_atom.keyword != TK_KEYWORD_VOID,
+        "Expected variable type in declaration"
+    );
+    var.type_name = current_atom.value;
+
+    consume_atom();
+    expect(
+        current_atom.type == TK_TYPE_IDENTIFIER,
+        "Expected variable name in declaration"
+    );
+    while (current_atom.type == TK_TYPE_IDENTIFIER) {
+        var.vars_names[var.vars_count] = current_atom.value;
+        var.vars_count++;
+
+        consume_atom();
+
+        if (current_atom.symbol == TK_SYMBOL_COMMA) {
+            consume_atom();
+        }
+    }
+
+    expect(
+        current_atom.symbol == TK_SYMBOL_SEMICOLON,
+        "Expected semicolon ';' at end of variable declaration"
+    );
+
+    subroutine->vars_count++;
+    subroutine->vars[var_i] = var;
+    var_i++;
+
+    parse_var_decs(subroutine, var_i);
 }
 
 static void parse_statements(Parser_subroutine_dec *subroutine)
@@ -289,6 +333,7 @@ static void expect(bool expression, char *failure_msg)
 {
     int strlen = 0;
 
+    // TODO: Use the strlen function in stdlib
     for (int i = 0;; i++) {
         if (failure_msg[i] == '\0') {
             strlen = i;

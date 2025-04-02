@@ -2,12 +2,12 @@
 #include "tokenizer.h"
 
 // TODO: Create a dynamic array.
-#define PARSER_MAX_C_VARS       100
-#define PARSER_MAX_C_FUNCS      100
-#define PARSER_MAX_VARS_LISTED  100
-#define PARSER_MAX_PARAMS       100
-#define PARSER_MAX_STATEMENTS   1000
-#define PARSER_MAX_VARS         1000
+#define PARSER_MAX_C_VARS       50
+#define PARSER_MAX_C_FUNCS      50
+#define PARSER_MAX_VARS_LISTED  10
+#define PARSER_MAX_PARAMS       10
+#define PARSER_MAX_STATEMENTS   50
+#define PARSER_MAX_VARS         50
 
 typedef enum {
     PARSER_VAR_STATIC,
