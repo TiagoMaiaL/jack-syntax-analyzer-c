@@ -55,6 +55,9 @@ static const char symbol_chars[] = {
     '~'
 };
 
+static int line;
+static int column;
+
 static FILE *source;
 static TKState state;
 
@@ -94,6 +97,9 @@ void tokenizer_start(FILE *handle)
     } else {
         state = TK_DEFAULT;
     }
+
+    line = 1;
+    column = 0;
 }
 
 Tokenizer_atom tokenizer_next()
@@ -110,6 +116,7 @@ Tokenizer_atom tokenizer_next()
     }
 
     if (tokenize_symbol(&atom)) {
+        column += strlen(atom.value);
         return atom;
     }
 
@@ -118,22 +125,27 @@ Tokenizer_atom tokenizer_next()
     }
 
     if (tokenize_keyword(&atom)) {
+        column += strlen(atom.value);
         return atom;
     }
 
     if (tokenize_identifier(&atom)) {
+        column += strlen(atom.value);
         return atom;
     }
 
     if (tokenize_int_constant(&atom)) {
+        column += strlen(atom.value);
         return atom;
     }
 
     if (tokenize_str_constant(&atom)) {
+        column += strlen(atom.value);
         return atom;
     }
 
     tokenize_unexpected_char(&atom);
+    column++;
     return atom;
 }
 
@@ -162,6 +174,16 @@ bool tokenizer_finished()
     return state == TK_FINISHED;
 }
 
+int tokenizer_get_line()
+{
+    return line;
+}
+
+int tokenizer_get_column()
+{
+    return column;
+}
+
 static bool tokenize_whitespace(Tokenizer_atom *atom)
 {
     if (state == TK_ERROR) {
@@ -169,13 +191,23 @@ static bool tokenize_whitespace(Tokenizer_atom *atom)
     }
 
     int len;
+    int newlines;
+    char ch;
     char *value;
 
     len = 0;
+    newlines = 0;
 
     while(isspace(peak())) {
         len++;
-        get_char();
+        ch = get_char();
+
+        if (ch == '\n') {
+            newlines++;
+            column = 0;
+        } else {
+            column++;
+        }
     }
 
     if (len == 0) {
@@ -193,6 +225,8 @@ static bool tokenize_whitespace(Tokenizer_atom *atom)
     atom->type = TK_TYPE_WHITESPACE;
     atom->value = value;
     atom->is_complete = true;
+
+    line += newlines;
 
     return true;
 }
@@ -243,6 +277,7 @@ static bool tokenize_comment(Tokenizer_atom *atom)
     char ch;
     bool is_line_comment;
     int comment_len;
+    int newlines;
 
     ch = get_char();
 
@@ -262,10 +297,12 @@ static bool tokenize_comment(Tokenizer_atom *atom)
 
     ch = get_char();
 
+    newlines = 0;
     is_line_comment = ch == '/';
     comment_len = 2; // / + (/ or *)
 
     while ((ch = get_char()) != EOF) {
+        column++;
         comment_len += 1;
 
         if (is_line_comment && ch == '\n') {
@@ -276,6 +313,13 @@ static bool tokenize_comment(Tokenizer_atom *atom)
             ch = get_char(); // Move cursor.
             comment_len += 1;
             break;
+        }
+
+        if (is_line_comment && ch == '\n') {
+            newlines++;
+            column = 0;
+        } else {
+            column++;
         }
     }
 
@@ -295,6 +339,7 @@ static bool tokenize_comment(Tokenizer_atom *atom)
     
     atom->type = TK_TYPE_COMMENT;
     atom->value = value;
+    line += newlines;
 
     return true;
 }

@@ -364,7 +364,11 @@ static bool is_type(Tokenizer_atom atom)
 
 static void exit_parsing(char *msg)
 {
-    // TODO: Print line and column numbers.
+    printf(
+        "Line %d, column %d\n", 
+        tokenizer_get_line(), 
+        tokenizer_get_column()
+    );
     printf("%s\n", msg);
     exit(EXIT_FAILURE);
 }

@@ -76,4 +76,6 @@ void tokenizer_start(FILE *handle);
 Tokenizer_atom tokenizer_peak();
 Tokenizer_atom tokenizer_next();
 bool tokenizer_finished();
+int tokenizer_get_line();
+int tokenizer_get_column();
 
