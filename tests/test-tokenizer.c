@@ -126,6 +126,7 @@ static void test_tokenizing_keywords()
     tst_true(atom.type == TK_TYPE_KEYWORD);
     tst_true(strcmp(atom.value, "null") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "int");
     tokenizer_start(test_file_handle); 
@@ -134,6 +135,7 @@ static void test_tokenizing_keywords()
     tst_true(atom.keyword == TK_KEYWORD_INT);
     tst_true(atom.type == TK_TYPE_KEYWORD);
     tst_true(strcmp(atom.value, "int") == 0);
+    free(atom.value);
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "int.");
     tokenizer_start(test_file_handle); 
@@ -142,11 +144,13 @@ static void test_tokenizing_keywords()
     tst_true(atom.keyword == TK_KEYWORD_INT);
     tst_true(atom.type == TK_TYPE_KEYWORD);
     tst_true(strcmp(atom.value, "int") == 0);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(atom.symbol == TK_SYMBOL_DOT);
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(strcmp(atom.value, ".") == 0);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
@@ -164,6 +168,7 @@ static void test_tokenizing_identifiers()
     tst_true(atom.type == TK_TYPE_IDENTIFIER);
     tst_true(strcmp(atom.value, "nullable") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "char1");
@@ -173,6 +178,7 @@ static void test_tokenizing_identifiers()
     tst_true(atom.type == TK_TYPE_IDENTIFIER);
     tst_true(strcmp(atom.value, "char1") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "char_");
@@ -182,6 +188,7 @@ static void test_tokenizing_identifiers()
     tst_true(atom.type == TK_TYPE_IDENTIFIER);
     tst_true(strcmp(atom.value, "char_") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "_asdf");
@@ -191,6 +198,7 @@ static void test_tokenizing_identifiers()
     tst_true(atom.type == TK_TYPE_IDENTIFIER);
     tst_true(strcmp(atom.value, "_asdf") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "__7__123");
@@ -200,6 +208,7 @@ static void test_tokenizing_identifiers()
     tst_true(atom.type == TK_TYPE_IDENTIFIER);
     tst_true(strcmp(atom.value, "__7__123") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "__7__;");
@@ -209,12 +218,14 @@ static void test_tokenizing_identifiers()
     tst_true(atom.type == TK_TYPE_IDENTIFIER);
     tst_true(strcmp(atom.value, "__7__") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(atom.symbol == TK_SYMBOL_SEMICOLON);
     tst_true(strcmp(atom.value, ";") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
 
     atom = tokenizer_next();
@@ -233,6 +244,7 @@ static void test_tokenizing_int_literals()
     tst_true(atom.type == TK_TYPE_INT_CONSTANT);
     tst_true(strcmp(atom.value, "1234") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "0");
@@ -243,6 +255,7 @@ static void test_tokenizing_int_literals()
     tst_true(atom.type == TK_TYPE_INT_CONSTANT);
     tst_true(strcmp(atom.value, "0") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "33");
     tokenizer_start(test_file_handle); 
@@ -252,6 +265,7 @@ static void test_tokenizing_int_literals()
     tst_true(atom.type == TK_TYPE_INT_CONSTANT);
     tst_true(strcmp(atom.value, "33") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "x=143+59219;");
     tokenizer_start(test_file_handle); 
@@ -259,29 +273,35 @@ static void test_tokenizing_int_literals()
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_IDENTIFIER);
     tst_true(strcmp(atom.value, "x") == 0);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(atom.symbol == TK_SYMBOL_EQUAL);
     tst_true(strcmp(atom.value, "=") == 0);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_INT_CONSTANT);
     tst_true(strcmp(atom.value, "143") == 0);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(atom.symbol == TK_SYMBOL_PLUS);
     tst_true(strcmp(atom.value, "+") == 0);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_INT_CONSTANT);
     tst_true(strcmp(atom.value, "59219") == 0);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(atom.symbol == TK_SYMBOL_SEMICOLON);
     tst_true(strcmp(atom.value, ";") == 0);
+    free(atom.value);
 
 
     atom = tokenizer_next();
@@ -300,6 +320,7 @@ static void test_tokenizing_str_literals()
     tst_true(atom.type == TK_TYPE_STR_CONSTANT);
     tst_true(strcmp(atom.value, "\"\"") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "\"testing str literal\"");
@@ -309,6 +330,7 @@ static void test_tokenizing_str_literals()
     tst_true(atom.type == TK_TYPE_STR_CONSTANT);
     tst_true(strcmp(atom.value, "\"testing str literal\"") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "\"asdf;NULL,!+=asdfkjh:::121313__\"");
@@ -318,6 +340,7 @@ static void test_tokenizing_str_literals()
     tst_true(atom.type == TK_TYPE_STR_CONSTANT);
     tst_true(strcmp(atom.value, "\"asdf;NULL,!+=asdfkjh:::121313__\"") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "x=\"test\";");
@@ -326,19 +349,23 @@ static void test_tokenizing_str_literals()
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_IDENTIFIER);
     tst_true(strcmp(atom.value, "x") == 0);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(strcmp(atom.value, "=") == 0);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_STR_CONSTANT);
     tst_true(strcmp(atom.value, "\"test\"") == 0);
     tst_true(atom.is_complete);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(strcmp(atom.value, ";") == 0);
+    free(atom.value);
 
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "\"asdf\n");
@@ -348,6 +375,7 @@ static void test_tokenizing_str_literals()
     tst_true(atom.type == TK_TYPE_STR_CONSTANT);
     tst_true(!atom.is_complete);
     tst_true(strcmp(atom.value, "\"asdf") == 0);
+    free(atom.value);
 
     test_file_handle = prepare_test_file(TEST_FILE_NAME, "\"asdf");
     tokenizer_start(test_file_handle); 
@@ -356,6 +384,7 @@ static void test_tokenizing_str_literals()
     tst_true(atom.type == TK_TYPE_STR_CONSTANT);
     tst_true(!atom.is_complete);
     tst_true(strcmp(atom.value, "\"asdf") == 0);
+    free(atom.value);
 
 
     atom = tokenizer_next();
@@ -580,6 +609,7 @@ static void test_tokenizing_simple_file()
     tst_true(atom.type == TK_TYPE_SYMBOL);
     tst_true(atom.symbol == TK_SYMBOL_R_CURLY);
     tst_true(strcmp(atom.value, "}") == 0);
+    free(atom.value);
 
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
