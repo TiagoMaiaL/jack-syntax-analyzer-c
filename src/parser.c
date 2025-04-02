@@ -326,28 +326,25 @@ static Tokenizer_atom peak_atom()
     return atom;
 }
 
-#define EXPECT_FAIL_MSG     "Unexpected token: "
-#define EXPECT_FAIL_MSG_LEN 18
+#define EXPECT_FAIL_MSG "Unexpected token"
 
 static void expect(bool expression, char *failure_msg)
 {
-    int strlen = 0;
+    int len = strlen(EXPECT_FAIL_MSG) + 1; // "%s "
+    len += strlen(current_atom.value) + 3; // "'%s'."
+    len += strlen(failure_msg) + 1;        // "' %s\n'"
+    len += 1; // '\0'
 
-    // TODO: Use the strlen function in stdlib
-    for (int i = 0;; i++) {
-        if (failure_msg[i] == '\0') {
-            strlen = i;
-            break;
-        }
-    }
-    strlen += EXPECT_FAIL_MSG_LEN + 1;
-
-    char error_output[strlen];
+    char error_output[len];
     error_output[0] = '\0';
 
-    strcat(error_output, EXPECT_FAIL_MSG);
-    // TODO: Include current token value in message.
-    strcat(error_output, failure_msg);
+    sprintf(
+        error_output, 
+        "%s '%s'. %s\n", 
+        EXPECT_FAIL_MSG, 
+        current_atom.value, 
+        failure_msg
+    );
 
     if (!expression) {
         exit_parsing(error_output);
