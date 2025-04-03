@@ -61,8 +61,15 @@ typedef struct {
 } Parser_jack_syntax; 
 
 typedef struct {
+    // TODO: Add property for operator
+    // TODO: Add property for linked list of terms 
+} Parser_term;
 
-} Parser_statement;
+typedef struct {
+    // TODO: Add main properties
+    // term
+    Parser_term *term;
+} Parser_expression;
 
 typedef struct {
     
@@ -85,8 +92,12 @@ typedef struct {
 } Parser_if_statement;
 
 typedef struct {
-
-} Parser_expression;
+    // TODO: add properties
+    // do_statement
+    // let_statement
+    // if_statement
+    // while_statement
+    // return statement
+} Parser_statement;
 
 Parser_jack_syntax parser_parse(FILE *source);
-

@@ -11,14 +11,15 @@ static void parse_subroutines(Parser_class_dec *class, short func_i);
 static void parse_params_list(Parser_subroutine_dec *subroutine);
 static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i);
 static void parse_statements(Parser_subroutine_dec *subroutine);
-static void parse_do();
+static void parse_do(Parser_subroutine_dec *subroutine);
 static void parse_let();
 static void parse_while();
 static void parse_return();
 static void parse_if();
+static void parse_expression_list();
 static void parse_expression();
 static void parse_term();
-static void parse_expression_list();
+static void parse_subroutine_call();
 static Tokenizer_atom consume_atom();
 static Tokenizer_atom peak_atom();
 static void expect(bool expression, char *failure_msg);
@@ -64,7 +65,6 @@ static Parser_class_dec parse_class_dec()
 
 static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
 {
-    // TODO: Unit test tokenizer peaking.
     bool has_var_decs;
 
     Tokenizer_atom peak = peak_atom();
@@ -298,6 +298,38 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i)
 }
 
 static void parse_statements(Parser_subroutine_dec *subroutine)
+{
+    Tokenizer_atom peak = peak_atom();
+    free(peak.value);
+
+    if (peak.keyword == TK_KEYWORD_LET) {
+    
+    } else if (peak.keyword == TK_KEYWORD_IF) {
+
+    } else if (peak.keyword == TK_KEYWORD_ELSE) {
+
+    } else if (peak.keyword == TK_KEYWORD_WHILE) {
+
+    } else if (peak.keyword == TK_KEYWORD_DO) {
+        parse_do(subroutine);
+
+    } else if (peak.keyword == TK_KEYWORD_RETURN) {
+
+    }
+}
+
+static void parse_do(Parser_subroutine_dec *subroutine)
+{
+    consume_atom();
+    expect(
+        current_atom.keyword == TK_KEYWORD_DO,
+        "Expected 'do' keyword at beginning of statement"
+    );
+
+    parse_subroutine_call();
+}
+
+static void parse_subroutine_call()
 {
 
 }
