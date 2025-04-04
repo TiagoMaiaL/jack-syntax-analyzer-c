@@ -6,6 +6,7 @@ LL_List ll_make_empty_list()
     LL_List list;
     list.head = NULL;
     list.tail = NULL;
+    list.count = 0;
     return list;
 }
 
@@ -15,6 +16,7 @@ LL_List ll_make_list(size_t head_data_size)
     LL_List list = ll_make_empty_list();
     list.head = node;
     list.tail = node;
+    list.count = 1;
     return list;
 }
 
@@ -41,6 +43,7 @@ void ll_append(LL_Node *node, LL_List *list)
 {
     list->tail->next = node;
     list->tail = node;
+    list->count++;
 }
 
 void ll_free(LL_List *list)

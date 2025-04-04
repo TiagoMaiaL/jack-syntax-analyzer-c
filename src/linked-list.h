@@ -7,6 +7,7 @@ typedef struct LL_Node LL_Node;
 struct LL_List {
     LL_Node *head;
     LL_Node *tail;
+    int count;
 };
 
 struct LL_Node {
