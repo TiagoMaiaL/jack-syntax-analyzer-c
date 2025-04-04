@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "linked-list.h"
 #include "tokenizer.h"
 
 // TODO: Create a dynamic array.

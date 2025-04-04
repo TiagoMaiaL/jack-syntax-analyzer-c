@@ -12,6 +12,7 @@ source_files=(
     '../src/parser.c'
     '../src/tokenizer.c'
     '../src/file-handler.c'
+    '../src/linked-list.c'
 )
 test_files=(
     '../tests/main.c'
