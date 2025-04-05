@@ -38,7 +38,7 @@ void test_parsing_empty_class()
 
     Parser_class_dec class = parser_parse(test_file_handle).class_dec;
     tst_true(strcmp(class.name, "Main") == 0);
-    tst_true(class.vars_count == 0);
+    tst_true(class.vars.count == 0);
     tst_true(class.subroutines_count == 0);
 
     erase_test_file(test_file_handle, TEST_FILE_NAME);
@@ -54,18 +54,27 @@ void test_parsing_class_with_vars()
         "}"
     );
 
+    LL_Node *node;
+    Parser_class_var_dec var;
     Parser_class_dec class = parser_parse(test_file_handle).class_dec;
 
-    tst_true(class.vars_count == 2);
-    tst_true(strcmp(class.vars[0].type_name, "int") == 0);
-    tst_true(strcmp(class.vars[0].vars_names[0], "count") == 0);
-    tst_true(class.vars[0].vars_count == 1);
+    node = class.vars.head;
+    var = *(Parser_class_var_dec *)node->data;
 
-    tst_true(strcmp(class.vars[1].type_name, "bool") == 0);
-    tst_true(strcmp(class.vars[1].vars_names[0], "flag_1") == 0);
-    tst_true(strcmp(class.vars[1].vars_names[1], "flag_2") == 0);
-    tst_true(strcmp(class.vars[1].vars_names[2], "flag_3") == 0);
-    tst_true(class.vars[1].vars_count == 3);
+    tst_true(class.vars.count == 2);
+
+    tst_true(strcmp(var.type_name, "int") == 0);
+    tst_true(strcmp(var.vars_names[0], "count") == 0);
+    tst_true(var.vars_count == 1);
+
+    node = node->next;
+    var = *(Parser_class_var_dec *)node->data;
+
+    tst_true(strcmp(var.type_name, "bool") == 0);
+    tst_true(strcmp(var.vars_names[0], "flag_1") == 0);
+    tst_true(strcmp(var.vars_names[1], "flag_2") == 0);
+    tst_true(strcmp(var.vars_names[2], "flag_3") == 0);
+    tst_true(var.vars_count == 3);
 
     erase_test_file(test_file_handle, TEST_FILE_NAME);
 }

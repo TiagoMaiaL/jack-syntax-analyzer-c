@@ -41,8 +41,13 @@ LL_Node *ll_tail(LL_Node *node)
 
 void ll_append(LL_Node *node, LL_List *list)
 {
-    list->tail->next = node;
-    list->tail = node;
+    if (list->head == NULL) {
+        list->head = node;
+        list->tail = node;
+    } else {
+        list->tail->next = node;
+        list->tail = node;
+    }
     list->count++;
 }
 

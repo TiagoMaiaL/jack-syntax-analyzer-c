@@ -42,7 +42,7 @@ static Parser_class_dec parse_class_dec()
     free(current_atom.value);
 
     Parser_class_dec class_dec;
-    class_dec.vars_count = 0;
+    class_dec.vars = ll_make_empty_list();
     class_dec.subroutines_count = 0; 
 
     consume_atom(); 
@@ -125,9 +125,11 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
         "Expected ';' at end of variable declaration."
     );
 
-    class->vars[var_i] = var_dec;
+    LL_Node *var_node = ll_make_node(sizeof(Parser_class_var_dec));
+    *(Parser_class_var_dec *)var_node->data = var_dec;
+    ll_append(var_node, &class->vars);
+
     var_i++;
-    class->vars_count = var_i;
 
     parse_class_vars_dec(class, var_i);
 }

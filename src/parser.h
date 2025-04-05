@@ -51,8 +51,8 @@ typedef struct {
 
 typedef struct {
     char *name;
-    short vars_count;
-    Parser_class_var_dec vars[PARSER_MAX_C_VARS];
+    //Parser_class_var_dec vars[PARSER_MAX_C_VARS];
+    LL_List vars;
     short subroutines_count;
     Parser_subroutine_dec subroutines[PARSER_MAX_C_FUNCS];
 } Parser_class_dec;
