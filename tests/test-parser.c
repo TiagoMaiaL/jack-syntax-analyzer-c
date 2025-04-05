@@ -64,17 +64,17 @@ void test_parsing_class_with_vars()
     tst_true(class.vars.count == 2);
 
     tst_true(strcmp(var.type_name, "int") == 0);
-    tst_true(strcmp(var.vars_names[0], "count") == 0);
-    tst_true(var.vars_count == 1);
+    tst_true(strcmp((char *)var.names.head->data, "count") == 0);
+    tst_true(var.names.count == 1);
 
     node = node->next;
     var = *(Parser_class_var_dec *)node->data;
 
     tst_true(strcmp(var.type_name, "bool") == 0);
-    tst_true(strcmp(var.vars_names[0], "flag_1") == 0);
-    tst_true(strcmp(var.vars_names[1], "flag_2") == 0);
-    tst_true(strcmp(var.vars_names[2], "flag_3") == 0);
-    tst_true(var.vars_count == 3);
+    tst_true(strcmp((char *)var.names.head->data, "flag_1") == 0);
+    tst_true(strcmp((char *)var.names.head->next->data, "flag_2") == 0);
+    tst_true(strcmp((char *)var.names.tail->data, "flag_3") == 0);
+    tst_true(var.names.count == 3);
 
     erase_test_file(test_file_handle, TEST_FILE_NAME);
 }

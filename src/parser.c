@@ -77,7 +77,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
     }
 
     Parser_class_var_dec var_dec;
-    var_dec.vars_count = 0;
+    var_dec.names = ll_make_empty_list();
 
     consume_atom();
     if (current_atom.keyword == TK_KEYWORD_STATIC) {
@@ -102,8 +102,10 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
         current_atom.type == TK_TYPE_IDENTIFIER,
         "Expected variable name in declaration"
     );
-    var_dec.vars_names[0] = current_atom.value;
-    var_dec.vars_count++;
+
+    LL_Node *name_node = ll_make_node(sizeof(char));
+    name_node->data = (void *)current_atom.value;
+    ll_append(name_node, &var_dec.names);
     
     consume_atom(); 
     while (current_atom.symbol == TK_SYMBOL_COMMA) {
@@ -113,8 +115,10 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
             current_atom.type == TK_TYPE_IDENTIFIER,
             "Expected variable name in declaration"
         );
-        var_dec.vars_names[var_dec.vars_count] = current_atom.value;
-        var_dec.vars_count++;
+
+        name_node = ll_make_node(sizeof(char));
+        name_node->data = (void *)current_atom.value;
+        ll_append(name_node, &var_dec.names);
 
         consume_atom();
         free(current_atom.value);

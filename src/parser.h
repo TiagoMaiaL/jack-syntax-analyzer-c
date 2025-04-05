@@ -18,8 +18,7 @@ typedef enum {
 typedef struct {
     Parser_class_var_scope scope;
     char *type_name;
-    short vars_count;
-    char* vars_names[PARSER_MAX_VARS_LISTED];
+    LL_List names;
 } Parser_class_var_dec;
 
 typedef struct {
@@ -51,7 +50,6 @@ typedef struct {
 
 typedef struct {
     char *name;
-    //Parser_class_var_dec vars[PARSER_MAX_C_VARS];
     LL_List vars;
     short subroutines_count;
     Parser_subroutine_dec subroutines[PARSER_MAX_C_FUNCS];
