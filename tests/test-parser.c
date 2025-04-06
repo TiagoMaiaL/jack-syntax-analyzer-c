@@ -162,21 +162,21 @@ void test_parsing_func_body()
     );
 
     Parser_class_dec class = parser_parse(test_file_handle).class_dec;
-    Parser_subroutine_dec subroutine = *(Parser_subroutine_dec *)class.subroutines.head;
+    Parser_subroutine_dec subroutine = *(Parser_subroutine_dec *)class.subroutines.head->data;
 
-    tst_true(subroutine.vars_count == 2);
+    tst_true(subroutine.vars.count == 2);
 
-    Parser_var_dec someInt = subroutine.vars[0];
-    tst_true(strcmp(someInt.type_name, "int") == 0);
-    tst_true(someInt.vars_count == 1);
-    tst_true(strcmp(someInt.vars_names[0], "someInt") == 0);
+    Parser_var_dec some_int = *(Parser_var_dec *)subroutine.vars.head->data;
+    tst_true(strcmp(some_int.type_name, "int") == 0);
+    tst_true(some_int.names.count == 1);
+    tst_true(strcmp((char *)some_int.names.head->data, "someInt") == 0);
     
-    Parser_var_dec chars_listed = subroutine.vars[1];
+    Parser_var_dec chars_listed = *(Parser_var_dec *)subroutine.vars.tail->data;
     tst_true(strcmp(chars_listed.type_name, "char") == 0);
-    tst_true(chars_listed.vars_count == 3);
-    tst_true(strcmp(chars_listed.vars_names[0], "char1") == 0);
-    tst_true(strcmp(chars_listed.vars_names[1], "char_2") == 0);
-    tst_true(strcmp(chars_listed.vars_names[2], "char__3") == 0);
+    tst_true(chars_listed.names.count == 3);
+    tst_true(strcmp((char *)chars_listed.names.head->data, "char1") == 0);
+    tst_true(strcmp((char *)chars_listed.names.head->next->data, "char_2") == 0);
+    tst_true(strcmp((char *)chars_listed.names.tail->data, "char__3") == 0);
 
     erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
