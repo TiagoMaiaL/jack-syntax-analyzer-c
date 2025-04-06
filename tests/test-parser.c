@@ -96,6 +96,7 @@ void test_parsing_class_with_empty_funcs()
     Parser_class_dec class = parser_parse(test_file_handle).class_dec;
     LL_Node *subroutine_node;
     Parser_subroutine_dec subroutine;
+    Parser_param param;
 
     tst_true(class.subroutines.count == 3);
 
@@ -105,11 +106,16 @@ void test_parsing_class_with_empty_funcs()
     tst_true(subroutine.scope == PARSER_FUNC_STATIC);
     tst_true(strcmp(subroutine.type_name, "void") == 0);
     tst_true(strcmp(subroutine.name, "foo") == 0);
-    tst_true(subroutine.params_count == 2);
-    tst_true(strcmp(subroutine.params[0].type_name, "int") == 0);
-    tst_true(strcmp(subroutine.params[0].name, "arg1") == 0);
-    tst_true(strcmp(subroutine.params[1].type_name, "int") == 0);
-    tst_true(strcmp(subroutine.params[1].name, "arg2") == 0);
+    tst_true(subroutine.params.count == 2);
+
+    param = *(Parser_param *)subroutine.params.head->data;
+    tst_true(strcmp(param.type_name, "int") == 0);
+    tst_true(strcmp(param.name, "arg1") == 0);
+
+    param = *(Parser_param *)subroutine.params.tail->data;
+    tst_true(strcmp(param.type_name, "int") == 0);
+    tst_true(strcmp(param.name, "arg2") == 0);
+
    
     subroutine_node = class.subroutines.head->next;
     subroutine = *(Parser_subroutine_dec *)subroutine_node->data;
@@ -117,11 +123,16 @@ void test_parsing_class_with_empty_funcs()
     tst_true(subroutine.scope == PARSER_FUNC_CONSTRUCTOR);
     tst_true(strcmp(subroutine.type_name, "Bar") == 0);
     tst_true(strcmp(subroutine.name, "new") == 0);
-    tst_true(subroutine.params_count == 2);
-    tst_true(strcmp(subroutine.params[0].type_name, "int") == 0);
-    tst_true(strcmp(subroutine.params[0].name, "age") == 0);
-    tst_true(strcmp(subroutine.params[1].type_name, "boolean") == 0);
-    tst_true(strcmp(subroutine.params[1].name, "some_flag") == 0);
+    tst_true(subroutine.params.count == 2);
+
+    param = *(Parser_param *)subroutine.params.head->data;
+    tst_true(strcmp(param.type_name, "int") == 0);
+    tst_true(strcmp(param.name, "age") == 0);
+
+    param = *(Parser_param *)subroutine.params.tail->data;
+    tst_true(strcmp(param.type_name, "boolean") == 0);
+    tst_true(strcmp(param.name, "some_flag") == 0);
+
 
     subroutine_node = class.subroutines.tail;
     subroutine = *(Parser_subroutine_dec *)subroutine_node->data;
@@ -129,9 +140,11 @@ void test_parsing_class_with_empty_funcs()
     tst_true(subroutine.scope == PARSER_FUNC_METHOD);
     tst_true(strcmp(subroutine.type_name, "int") == 0);
     tst_true(strcmp(subroutine.name, "test") == 0);
-    tst_true(subroutine.params_count == 1);
-    tst_true(strcmp(subroutine.params[0].type_name, "char") == 0);
-    tst_true(strcmp(subroutine.params[0].name, "arg1") == 0);
+    tst_true(subroutine.params.count == 1);
+
+    param = *(Parser_param *)subroutine.params.tail->data;
+    tst_true(strcmp(param.type_name, "char") == 0);
+    tst_true(strcmp(param.name, "arg1") == 0);
 
     erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
