@@ -23,8 +23,7 @@ typedef struct {
 
 typedef struct {
     char *type_name;
-    short vars_count;
-    char* vars_names[PARSER_MAX_VARS_LISTED];
+    LL_List names;
 } Parser_var_dec;
 
 typedef struct {
@@ -43,8 +42,7 @@ typedef struct {
     char *type_name;
     char *name;
     LL_List params;
-    short vars_count;
-    Parser_var_dec vars[PARSER_MAX_VARS];
+    LL_List vars;
 } Parser_subroutine_dec;
 
 typedef struct {

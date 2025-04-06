@@ -154,7 +154,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
 
     Parser_subroutine_dec subroutine;
     subroutine.params = ll_make_empty_list();
-    subroutine.vars_count = 0;
+    subroutine.vars = ll_make_empty_list();
 
     consume_atom();
     if (current_atom.keyword == TK_KEYWORD_FUNCTION) {
@@ -266,7 +266,7 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i)
     free(current_atom.value);
     
     Parser_var_dec var;
-    var.vars_count = 0;
+    var.names = ll_make_empty_list();
 
     consume_atom();
     expect(
@@ -282,8 +282,9 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i)
         "Expected variable name in declaration"
     );
     while (current_atom.type == TK_TYPE_IDENTIFIER) {
-        var.vars_names[var.vars_count] = current_atom.value;
-        var.vars_count++;
+        LL_Node *name_node = ll_make_node(sizeof(char));
+        name_node->data = (void *)current_atom.value;
+        ll_append(name_node, &var.names);
 
         consume_atom();
 
@@ -299,8 +300,10 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i)
     );
     free(current_atom.value);
 
-    subroutine->vars_count++;
-    subroutine->vars[var_i] = var;
+    LL_Node *var_node = ll_make_node(sizeof(Parser_var_dec));
+    *(Parser_var_dec *)var_node->data = var;
+    ll_append(var_node, &subroutine->vars);
+
     var_i++;
 
     parse_var_decs(subroutine, var_i);
