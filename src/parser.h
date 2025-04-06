@@ -1,14 +1,7 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include "linked-list.h"
 #include "tokenizer.h"
-
-// TODO: Create a dynamic array.
-#define PARSER_MAX_C_VARS       50
-#define PARSER_MAX_C_FUNCS      50
-#define PARSER_MAX_VARS_LISTED  10
-#define PARSER_MAX_PARAMS       10
-#define PARSER_MAX_STATEMENTS   50
-#define PARSER_MAX_VARS         50
 
 typedef enum {
     PARSER_VAR_STATIC,
@@ -43,6 +36,7 @@ typedef struct {
     char *name;
     LL_List params;
     LL_List vars;
+    LL_List statements;
 } Parser_subroutine_dec;
 
 typedef struct {
@@ -61,38 +55,42 @@ typedef struct {
 } Parser_term;
 
 typedef struct {
-    // TODO: Add main properties
-    // term
+    // TODO: Add main properties term
     Parser_term *term;
 } Parser_expression;
 
 typedef struct {
-    
+    Parser_expression *subroutine_call;
 } Parser_do_statement;
 
 typedef struct {
-
+    char *var_name;
+    Parser_expression *subscript;
+    Parser_expression *value;
 } Parser_let_statement;
 
 typedef struct {
-
-} Parser_while_statement;
-
-typedef struct {
-
-} Parser_return_statement;
-
-typedef struct {
-
+    Parser_expression *conditional;
+    LL_List conditional_statements;
+    bool has_else;
+    LL_List else_statements;
 } Parser_if_statement;
 
 typedef struct {
-    // TODO: add properties
-    // do_statement
-    // let_statement
-    // if_statement
-    // while_statement
-    // return statement
+    Parser_expression *conditional;
+    LL_List statements;
+} Parser_while_statement;
+
+typedef struct {
+    Parser_expression *expression;
+} Parser_return_statement;
+
+typedef struct {
+    Parser_do_statement *do_statement;
+    Parser_let_statement *let_statement;
+    Parser_if_statement *if_statement;
+    Parser_while_statement *while_statement;
+    Parser_return_statement *return_statement;
 } Parser_statement;
 
 Parser_jack_syntax parser_parse(FILE *source);

@@ -19,7 +19,6 @@ static void parse_if();
 static void parse_expression_list();
 static void parse_expression();
 static void parse_term();
-static void parse_subroutine_call();
 static Tokenizer_atom consume_atom();
 static Tokenizer_atom peak_atom();
 static void expect(bool expression, char *failure_msg);
@@ -155,6 +154,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
     Parser_subroutine_dec subroutine;
     subroutine.params = ll_make_empty_list();
     subroutine.vars = ll_make_empty_list();
+    subroutine.statements = ll_make_empty_list();
 
     consume_atom();
     if (current_atom.keyword == TK_KEYWORD_FUNCTION) {
@@ -337,12 +337,6 @@ static void parse_do(Parser_subroutine_dec *subroutine)
         current_atom.keyword == TK_KEYWORD_DO,
         "Expected 'do' keyword at beginning of statement"
     );
-
-    parse_subroutine_call();
-}
-
-static void parse_subroutine_call()
-{
 
 }
 
