@@ -36,14 +36,15 @@ typedef enum {
     PARSER_FUNC_STATIC,
     PARSER_FUNC_CONSTRUCTOR,
     PARSER_FUNC_METHOD
-} Parser_func_scope; // TODO: rename to Parser_subroutine_scope.
+} Parser_subroutine_scope;
 
 typedef struct {
-    Parser_func_scope scope;
+    Parser_subroutine_scope scope;
     char *type_name;
     char *name;
     short params_count;
-    Parser_param params[PARSER_MAX_PARAMS];
+    Parser_param params[10];
+    //LL_List params;
     short vars_count;
     Parser_var_dec vars[PARSER_MAX_VARS];
 } Parser_subroutine_dec;
@@ -51,8 +52,7 @@ typedef struct {
 typedef struct {
     char *name;
     LL_List vars;
-    short subroutines_count;
-    Parser_subroutine_dec subroutines[PARSER_MAX_C_FUNCS];
+    LL_List subroutines;
 } Parser_class_dec;
 
 typedef struct {

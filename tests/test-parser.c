@@ -93,6 +93,8 @@ void test_parsing_class_with_empty_funcs()
         "}"
     );
 
+    // TODO: Update test to use subroutines.
+
     Parser_class_dec class = parser_parse(test_file_handle).class_dec;
 
     tst_true(class.subroutines_count == 3);

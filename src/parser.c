@@ -43,7 +43,7 @@ static Parser_class_dec parse_class_dec()
 
     Parser_class_dec class_dec;
     class_dec.vars = ll_make_empty_list();
-    class_dec.subroutines_count = 0; 
+    class_dec.subroutines = ll_make_empty_list();
 
     consume_atom(); 
     expect(current_atom.type == TK_TYPE_IDENTIFIER, "Class name expected"); 
@@ -203,10 +203,12 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
     );
     free(current_atom.value);
 
-    class->subroutines[func_i] = subroutine;
+    LL_Node *node = ll_make_node(sizeof(Parser_subroutine_dec));
+    *(Parser_subroutine_dec *)node->data = subroutine;
+    ll_append(node, &class->subroutines);
+
     func_i++;
-    class->subroutines_count = func_i;
-    
+
     parse_subroutines(class, func_i);
 }
 
