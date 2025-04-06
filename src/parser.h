@@ -42,9 +42,7 @@ typedef struct {
     Parser_subroutine_scope scope;
     char *type_name;
     char *name;
-    short params_count;
-    Parser_param params[10];
-    //LL_List params;
+    LL_List params;
     short vars_count;
     Parser_var_dec vars[PARSER_MAX_VARS];
 } Parser_subroutine_dec;

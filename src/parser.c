@@ -153,7 +153,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
     }
 
     Parser_subroutine_dec subroutine;
-    subroutine.params_count = 0;
+    subroutine.params = ll_make_empty_list();
     subroutine.vars_count = 0;
 
     consume_atom();
@@ -233,9 +233,10 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
             "Expected parameter name in function declaration"
         );
         param.name = current_atom.value;
-
-        subroutine->params[subroutine->params_count] = param;
-        subroutine->params_count++;
+        
+        LL_Node *param_node = ll_make_node(sizeof(Parser_param));
+        *(Parser_param *)param_node->data = param;
+        ll_append(param_node, &subroutine->params);
 
         consume_atom();
         if (current_atom.symbol == TK_SYMBOL_COMMA) {
