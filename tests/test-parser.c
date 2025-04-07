@@ -13,7 +13,8 @@ static FILE *test_file_handle = NULL;
 void test_parsing_empty_class();
 void test_parsing_class_with_vars();
 void test_parsing_class_with_empty_funcs();
-void test_parsing_func_body();
+void test_parsing_func_body_with_vars();
+void test_parsing_func_body_with_statements();
 void test_parsing_expr();
 
 void test_parser()
@@ -23,7 +24,8 @@ void test_parser()
     tst_unit("Empty class", test_parsing_empty_class);
     tst_unit("Class with vars", test_parsing_class_with_vars);
     tst_unit("Class with empty funcs", test_parsing_class_with_empty_funcs);
-    tst_unit("Func body", test_parsing_func_body);
+    tst_unit("Func body with vars", test_parsing_func_body_with_vars);
+    tst_unit("Func body with statements", test_parsing_func_body_with_statements);
     tst_unit("Expressions", test_parsing_expr);
 
     tst_suite_finish();
@@ -149,7 +151,7 @@ void test_parsing_class_with_empty_funcs()
     erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
-void test_parsing_func_body()
+void test_parsing_func_body_with_vars()
 {
      test_file_handle = prepare_test_file(
         TEST_FILE_NAME, 
@@ -179,6 +181,27 @@ void test_parsing_func_body()
     tst_true(strcmp((char *)chars_listed.names.tail->data, "char__3") == 0);
 
     erase_test_file(test_file_handle, TEST_FILE_NAME);
+}
+
+void test_parsing_func_body_with_statements()
+{
+    test_file_handle = prepare_test_file(
+        TEST_FILE_NAME, 
+        "class Bar {\n"
+        "  method int test(char arg1) {\n"
+        "    do funcCall();\n"
+        "    do instance.methodCall();\n"
+        "  }\n"
+        "}"
+    );
+
+    Parser_class_dec class = parser_parse(test_file_handle).class_dec;
+    Parser_subroutine_dec subroutine = *(Parser_subroutine_dec *)class.subroutines.head->data;
+
+    tst_true(subroutine.statements.count == 2);
+
+    // TODO: Write some tests.
+
 }
 
 void test_parsing_expr()

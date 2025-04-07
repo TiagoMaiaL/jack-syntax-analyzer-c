@@ -6,10 +6,10 @@
 static Tokenizer_atom current_atom;
 
 static Parser_class_dec parse_class_dec();
-static void parse_class_vars_dec(Parser_class_dec *class, short var_i);
-static void parse_subroutines(Parser_class_dec *class, short func_i);
+static void parse_class_vars_dec(Parser_class_dec *class);
+static void parse_subroutines(Parser_class_dec *class);
 static void parse_params_list(Parser_subroutine_dec *subroutine);
-static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i);
+static void parse_var_decs(Parser_subroutine_dec *subroutine);
 static void parse_statements(Parser_subroutine_dec *subroutine);
 static void parse_do(Parser_subroutine_dec *subroutine);
 static void parse_let();
@@ -56,8 +56,8 @@ static Parser_class_dec parse_class_dec()
     expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' symbol expected");
     free(current_atom.value);
     
-    parse_class_vars_dec(&class_dec, 0);
-    parse_subroutines(&class_dec, 0);
+    parse_class_vars_dec(&class_dec);
+    parse_subroutines(&class_dec);
 
     consume_atom();
     expect(current_atom.symbol == TK_SYMBOL_R_CURLY, "'}' symbol expected");
@@ -66,7 +66,7 @@ static Parser_class_dec parse_class_dec()
     return class_dec;
 }
 
-static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
+static void parse_class_vars_dec(Parser_class_dec *class)
 {
     bool has_var_decs;
 
@@ -136,12 +136,10 @@ static void parse_class_vars_dec(Parser_class_dec *class, short var_i)
     *(Parser_class_var_dec *)var_node->data = var_dec;
     ll_append(var_node, &class->vars);
 
-    var_i++;
-
-    parse_class_vars_dec(class, var_i);
+    parse_class_vars_dec(class);
 }
 
-static void parse_subroutines(Parser_class_dec *class, short func_i)
+static void parse_subroutines(Parser_class_dec *class)
 {
     bool has_func_decs;
 
@@ -196,7 +194,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
     );
     free(current_atom.value);
 
-    parse_var_decs(&subroutine, 0);
+    parse_var_decs(&subroutine);
     parse_statements(&subroutine);
 
     consume_atom();
@@ -211,9 +209,7 @@ static void parse_subroutines(Parser_class_dec *class, short func_i)
     *(Parser_subroutine_dec *)node->data = subroutine;
     ll_append(node, &class->subroutines);
 
-    func_i++;
-
-    parse_subroutines(class, func_i);
+    parse_subroutines(class);
 }
 
 static void parse_params_list(Parser_subroutine_dec *subroutine)
@@ -257,7 +253,7 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
     free(current_atom.value);
 }
 
-static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i)
+static void parse_var_decs(Parser_subroutine_dec *subroutine)
 {
     Tokenizer_atom peak = peak_atom();
     free(peak.value);
@@ -308,9 +304,7 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine, short var_i)
     *(Parser_var_dec *)var_node->data = var;
     ll_append(var_node, &subroutine->vars);
 
-    var_i++;
-
-    parse_var_decs(subroutine, var_i);
+    parse_var_decs(subroutine);
 }
 
 static void parse_statements(Parser_subroutine_dec *subroutine)
@@ -331,7 +325,12 @@ static void parse_statements(Parser_subroutine_dec *subroutine)
 
     } else if (peak.keyword == TK_KEYWORD_RETURN) {
 
+
+    } else {
+        return;
     }
+
+    parse_statements(subroutine);
 }
 
 static void parse_do(Parser_subroutine_dec *subroutine)
