@@ -107,7 +107,7 @@ struct Parser_expression {
 };
 
 typedef struct {
-    Parser_expression subroutine_call;
+    Parser_term_subroutine_call subroutine_call;
 } Parser_do_statement;
 
 typedef struct {

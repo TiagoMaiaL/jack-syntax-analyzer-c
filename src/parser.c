@@ -412,19 +412,12 @@ static void parse_subroutine_call(Parser_do_statement *do_statement)
         "Expected ')' in subroutine call"
     );
 
-    Parser_term_subroutine_call *subroutine_call;
-    subroutine_call = malloc(sizeof(Parser_term_subroutine_call));
-    subroutine_call->instance_var_name = instance_var_name;
-    subroutine_call->subroutine_name = subroutine_name;
-    subroutine_call->param_expressions = expressions;
+    Parser_term_subroutine_call subroutine_call;
+    subroutine_call.instance_var_name = instance_var_name;
+    subroutine_call.subroutine_name = subroutine_name;
+    subroutine_call.param_expressions = expressions;
 
-    Parser_term *term = make_empty_term();
-    term->subroutine_call = subroutine_call;
-
-    Parser_expression expression = make_empty_expression();
-    expression.term = term;
-
-    do_statement->subroutine_call = expression;
+    do_statement->subroutine_call = subroutine_call;
 }
 
 static Parser_statement make_empty_statement()
