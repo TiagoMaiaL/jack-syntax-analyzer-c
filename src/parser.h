@@ -49,15 +49,61 @@ typedef struct {
     Parser_class_dec class_dec;
 } Parser_jack_syntax; 
 
-typedef struct {
-    // TODO: Add property for operator
-    // TODO: Add property for linked list of terms 
-} Parser_term;
+typedef struct Parser_expression Parser_expression;
+typedef struct Parser_term Parser_term;
+
+typedef enum {
+    PARSER_TERM_OP_ADDITION,
+    PARSER_TERM_OP_SUBTRACTION,
+    PARSER_TERM_OP_MULTIPLICATION,
+    PARSER_TERM_OP_DIVISION,
+    PARSER_TERM_OP_AND,
+    PARSER_TERM_OP_OR,
+    PARSER_TERM_OP_LESSER,
+    PARSER_TERM_OP_GREATER,
+    PARSER_TERM_OP_ASSIGN,
+    PARSER_TERM_OP_NOT,
+    PARSER_TERM_OP_UNDEFINED
+} Parser_term_operator;
+
+typedef enum {
+    PARSER_TERM_KEYWORD_TRUE,
+    PARSER_TERM_KEYWORD_FALSE,
+    PARSER_TERM_KEYWORD_NULL,
+    PARSER_TERM_KEYWORD_THIS,
+    PARSER_TERM_KEYWORD_UNDEFINED
+} Parser_term_keyword_constant;
 
 typedef struct {
-    // TODO: Add main properties term
+    char *var_name;
+    LL_List subscript_expressions;
+} Parser_term_var_usage;
+
+typedef struct {
+    char *instance_var_name;
+    char *subroutine_name;
+    LL_List param_expressions;
+} Parser_term_subroutine_call;
+
+typedef struct {
+    Parser_term_operator unary_op;
+    Parser_term *sub_term;
+} Parser_sub_term;
+
+struct Parser_term {
+    char *integer;
+    char *string;
+    Parser_term_keyword_constant keyword_value;
+    Parser_term_var_usage *var_usage;
+    Parser_expression *parenthesized_expression;
+    Parser_sub_term *sub_term;
+};
+
+struct Parser_expression {
     Parser_term *term;
-} Parser_expression;
+    Parser_term_operator op;
+    Parser_term *right_term;
+};
 
 typedef struct {
     Parser_expression *subroutine_call;
@@ -94,3 +140,4 @@ typedef struct {
 } Parser_statement;
 
 Parser_jack_syntax parser_parse(FILE *source);
+
