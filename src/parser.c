@@ -6,23 +6,31 @@
 static Tokenizer_atom current_atom;
 
 static Parser_class_dec parse_class_dec();
+
 static void parse_class_vars_dec(Parser_class_dec *class);
 static void parse_subroutines(Parser_class_dec *class);
 static void parse_params_list(Parser_subroutine_dec *subroutine);
+
 static void parse_var_decs(Parser_subroutine_dec *subroutine);
+
 static void parse_statements(Parser_subroutine_dec *subroutine);
 static void parse_do(Parser_subroutine_dec *subroutine);
-static void parse_let();
-static void parse_while();
-static void parse_return();
-static void parse_if();
+static void parse_let(Parser_subroutine_dec *subroutine);
+static void parse_if(Parser_subroutine_dec *subroutine);
+static void parse_while(Parser_subroutine_dec *subroutine);
+static void parse_return(Parser_subroutine_dec *subroutine);
 static Parser_statement make_empty_statement();
+
 static void parse_expression_list();
-static void parse_expression();
-static void parse_term();
+static Parser_expression parse_expression();
+static Parser_term parse_term();
 static void parse_subroutine_call(Parser_do_statement *do_statement);
+static bool is_expression_keyword(Tokenizer_symbol symbol);
+static bool is_operator(Tokenizer_symbol symbol);
+static bool is_unary_operator(Tokenizer_symbol symbol);
 static Parser_expression make_empty_expression();
-static Parser_term *make_empty_term();
+static Parser_term make_empty_term();
+
 static Tokenizer_atom consume_atom();
 static Tokenizer_atom peak_atom();
 static void expect(bool expression, char *failure_msg);
@@ -313,7 +321,8 @@ static void parse_statements(Parser_subroutine_dec *subroutine)
     free(peak.value);
 
     if (peak.keyword == TK_KEYWORD_LET) {
-    
+        parse_let(subroutine);    
+
     } else if (peak.keyword == TK_KEYWORD_IF) {
 
     } else if (peak.keyword == TK_KEYWORD_ELSE) {
@@ -331,6 +340,40 @@ static void parse_statements(Parser_subroutine_dec *subroutine)
     }
 
     parse_statements(subroutine);
+}
+
+static void parse_let(Parser_subroutine_dec *subroutine)
+{
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.keyword == TK_KEYWORD_LET,
+        "Expected let keyword in variable assignemnt"
+    );
+
+    consume_atom();
+    expect(
+        current_atom.type == TK_TYPE_IDENTIFIER,
+        "Expected variable name in assignment"
+    );
+
+    char *var_name = current_atom.value;
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_EQUAL,
+        "Expected '=' in variable assignment"
+    );
+
+    Parser_expression expr = parse_expression();
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_SEMICOLON,
+        "Expected '=' in variable assignment"
+    );
 }
 
 static void parse_do(Parser_subroutine_dec *subroutine)
@@ -358,6 +401,86 @@ static void parse_do(Parser_subroutine_dec *subroutine)
     LL_Node *statement_node = ll_make_node(sizeof(Parser_statement));
     *(Parser_statement *)statement_node->data = statement;
     ll_append(statement_node, &subroutine->statements);
+}
+
+static Parser_expression parse_expression()
+{
+    
+}
+
+static Parser_term parse_term()
+{
+    Parser_term term = make_empty_term();
+
+    consume_atom();
+
+    if (current_atom.type == TK_TYPE_INT_CONSTANT) {
+        term.integer = current_atom.value;
+
+    } else if (current_atom.type == TK_TYPE_STR_CONSTANT) {
+        term.string = current_atom.value;
+
+    } else if (is_expression_keyword(current_atom.keyword)) {
+        if (current_atom.keyword == TK_KEYWORD_TRUE) {
+            term.keyword_value = PARSER_TERM_KEYWORD_TRUE;
+
+        } else if (current_atom.keyword == TK_KEYWORD_FALSE) {
+            term.keyword_value = PARSER_TERM_KEYWORD_FALSE;
+
+        } else if (current_atom.keyword == TK_KEYWORD_NULL_VAL) {
+            term.keyword_value = PARSER_TERM_KEYWORD_NULL;
+
+        } else if (current_atom.keyword == TK_KEYWORD_THIS) {
+            term.keyword_value = PARSER_TERM_KEYWORD_THIS;
+        }
+    } else if (current_atom.type == TK_TYPE_IDENTIFIER) {
+        Tokenizer_atom peak = peak_atom();
+        free(peak.value);
+        
+        if (peak.symbol == TK_SYMBOL_L_PAREN || peak.symbol == TK_SYMBOL_DOT) {
+            // TODO: Parse subroutine call.
+
+        } else {
+            // TODO: Parse var usage.
+        }
+    } else if (current_atom.symbol == TK_SYMBOL_L_PAREN) {
+        // TODO: Parse parenthesized child expression.
+
+    } else if (is_unary_operator(current_atom.symbol)) {
+        // TODO: Parse term with unary operator.
+
+    } else {
+        // Expression expected. Fail parsing.
+        exit_parsing("Expected start of expression term.");
+    }
+               
+    return term;
+}
+
+static bool is_expression_keyword(Tokenizer_symbol symbol)
+{
+    return symbol == TK_KEYWORD_TRUE    ||
+        symbol == TK_KEYWORD_FALSE      ||
+        symbol == TK_KEYWORD_NULL_VAL   ||
+        symbol == TK_KEYWORD_THIS;
+}
+
+static bool is_operator(Tokenizer_symbol symbol)
+{
+    return symbol == TK_SYMBOL_PLUS     ||
+        symbol == TK_SYMBOL_MINUS       ||
+        symbol == TK_SYMBOL_ASTERISK    ||
+        symbol == TK_SYMBOL_SLASH       ||
+        symbol == TK_SYMBOL_AMPERSAND   ||
+        symbol == TK_SYMBOL_VERT_BAR    ||
+        symbol == TK_SYMBOL_LESS_TH     ||
+        symbol == TK_SYMBOL_GREATER_TH  ||
+        symbol == TK_SYMBOL_EQUAL;
+}
+
+static bool is_unary_operator(Tokenizer_symbol symbol)
+{
+    return symbol == TK_SYMBOL_MINUS || symbol == TK_SYMBOL_NOT;
 }
 
 static void parse_subroutine_call(Parser_do_statement *do_statement)
@@ -439,16 +562,16 @@ static Parser_expression make_empty_expression()
     return expression;
 }
 
-static Parser_term *make_empty_term()
+static Parser_term make_empty_term()
 {
-    Parser_term *term = malloc(sizeof(Parser_term));
-    term->integer = NULL;
-    term->string = NULL;
-    term->keyword_value = PARSER_TERM_KEYWORD_UNDEFINED;
-    term->var_usage = NULL;
-    term->subroutine_call = NULL;
-    term->parenthesized_expression = NULL;
-    term->sub_term = NULL;
+    Parser_term term;
+    term.integer = NULL;
+    term.string = NULL;
+    term.keyword_value = PARSER_TERM_KEYWORD_UNDEFINED;
+    term.var_usage = NULL;
+    term.subroutine_call = NULL;
+    term.parenthesized_expression = NULL;
+    term.sub_term = NULL;
     return term;
 }
 

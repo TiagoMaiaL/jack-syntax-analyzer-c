@@ -185,6 +185,14 @@ void test_parsing_func_body_with_vars()
 
 void test_parsing_func_body_with_statements()
 {
+    Parser_class_dec class;
+    Parser_subroutine_dec subroutine;
+    Parser_statement stmt;
+    Parser_do_statement do_stmt;
+    Parser_let_statement let_stmt;
+    Parser_return_statement return_stmt;
+    Parser_term_subroutine_call call;
+
     test_file_handle = prepare_test_file(
         TEST_FILE_NAME, 
         "class Bar {\n"
@@ -195,13 +203,58 @@ void test_parsing_func_body_with_statements()
         "}"
     );
 
-    Parser_class_dec class = parser_parse(test_file_handle).class_dec;
-    Parser_subroutine_dec subroutine = *(Parser_subroutine_dec *)class.subroutines.head->data;
+    class = parser_parse(test_file_handle).class_dec;
+    subroutine = *(Parser_subroutine_dec *)class.subroutines.head->data;
 
     tst_true(subroutine.statements.count == 2);
 
-    // TODO: Write some tests.
+    stmt = *(Parser_statement *)subroutine.statements.head->data;
+    do_stmt = *stmt.do_statement;
+    call = do_stmt.subroutine_call;
 
+    tst_true(call.instance_var_name == NULL);
+    tst_true(strcmp(call.subroutine_name, "funcCall") == 0);
+
+    stmt = *(Parser_statement *)subroutine.statements.tail->data;
+    do_stmt = *stmt.do_statement;
+    call = do_stmt.subroutine_call;
+
+    tst_true(strcmp(call.instance_var_name, "instance") == 0);
+    tst_true(strcmp(call.subroutine_name, "methodCall") == 0);
+    
+
+    test_file_handle = prepare_test_file(
+        TEST_FILE_NAME, 
+        "class Foo {\n"
+        "  method int some_method() {\n"
+        "    let x = func_call();\n"
+        "    let y[1] = call();\n"
+        "  }\n"
+        "}"
+    );
+
+    class = parser_parse(test_file_handle).class_dec;
+    subroutine = *(Parser_subroutine_dec *)class.subroutines.head->data;
+
+    tst_true(subroutine.statements.count == 2);
+
+    stmt = *(Parser_statement *)subroutine.statements.head->data;
+    let_stmt = *stmt.let_statement;
+    char *func_name = let_stmt.value->term->subroutine_call->subroutine_name;
+
+    tst_true(strcmp(let_stmt.var_name, "x") == 0);
+    tst_true(let_stmt.subscript == NULL);
+    tst_true(strcmp(func_name, "func_call") == 0);
+
+    stmt = *(Parser_statement *)subroutine.statements.tail->data;
+    let_stmt = *stmt.let_statement;
+    func_name = let_stmt.value->term->subroutine_call->subroutine_name;
+
+    tst_true(strcmp(let_stmt.var_name, "y") == 0);
+    tst_true(strcmp(let_stmt.subscript->term->integer, "1") == 0);
+    tst_true(strcmp(func_name, "call") == 0);
+
+    erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
 
 void test_parsing_expr()
