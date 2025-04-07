@@ -16,9 +16,13 @@ static void parse_let();
 static void parse_while();
 static void parse_return();
 static void parse_if();
+static Parser_statement make_empty_statement();
 static void parse_expression_list();
 static void parse_expression();
 static void parse_term();
+static void parse_subroutine_call(Parser_do_statement *do_statement);
+static Parser_expression make_empty_expression();
+static Parser_term *make_empty_term();
 static Tokenizer_atom consume_atom();
 static Tokenizer_atom peak_atom();
 static void expect(bool expression, char *failure_msg);
@@ -333,11 +337,127 @@ static void parse_statements(Parser_subroutine_dec *subroutine)
 static void parse_do(Parser_subroutine_dec *subroutine)
 {
     consume_atom();
+    free(current_atom.value);
     expect(
         current_atom.keyword == TK_KEYWORD_DO,
         "Expected 'do' keyword at beginning of statement"
     );
 
+    Parser_do_statement *do_statement = malloc(sizeof(Parser_do_statement));
+    parse_subroutine_call(do_statement);
+
+    Parser_statement statement = make_empty_statement();
+    statement.do_statement = do_statement;
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_SEMICOLON,
+        "Expected ';' at end of statement."
+    );
+
+    LL_Node *statement_node = ll_make_node(sizeof(Parser_statement));
+    *(Parser_statement *)statement_node->data = statement;
+    ll_append(statement_node, &subroutine->statements);
+}
+
+static void parse_subroutine_call(Parser_do_statement *do_statement)
+{
+    char *instance_var_name = NULL;
+    char *subroutine_name = NULL;
+
+    consume_atom();
+    expect(
+        current_atom.type == TK_TYPE_IDENTIFIER,
+        "Expected name of subroutine or "
+        "instance in function call"
+    );
+
+    Tokenizer_atom peak = peak_atom();
+    free(peak.value);
+
+    if (peak.symbol == TK_SYMBOL_DOT) {
+        instance_var_name = current_atom.value;
+
+        consume_atom();
+        free(current_atom.value);
+
+        consume_atom();
+        expect(
+            current_atom.type == TK_TYPE_IDENTIFIER,
+            "Expected name of method in "
+            "method call"
+        );
+
+        subroutine_name = current_atom.value;
+
+    } else {
+        subroutine_name = current_atom.value;
+    }
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_L_PAREN,
+        "Expected '(' in subroutine call"
+    );
+
+    LL_List expressions = ll_make_empty_list();
+    //TODO: parse_expressions_list(&expressions);
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_R_PAREN,
+        "Expected ')' in subroutine call"
+    );
+
+    Parser_term_subroutine_call *subroutine_call;
+    subroutine_call = malloc(sizeof(Parser_term_subroutine_call));
+    subroutine_call->instance_var_name = instance_var_name;
+    subroutine_call->subroutine_name = subroutine_name;
+    subroutine_call->param_expressions = expressions;
+
+    Parser_term *term = make_empty_term();
+    term->subroutine_call = subroutine_call;
+
+    Parser_expression expression = make_empty_expression();
+    expression.term = term;
+
+    do_statement->subroutine_call = expression;
+}
+
+static Parser_statement make_empty_statement()
+{
+    Parser_statement statement;
+    statement.do_statement = NULL;
+    statement.let_statement = NULL;
+    statement.if_statement = NULL;
+    statement.while_statement = NULL;
+    statement.return_statement = NULL;
+    return statement;
+}
+
+static Parser_expression make_empty_expression()
+{
+    Parser_expression expression;
+    expression.term = NULL;
+    expression.op = PARSER_TERM_OP_UNDEFINED;
+    expression.right_term = NULL;
+    return expression;
+}
+
+static Parser_term *make_empty_term()
+{
+    Parser_term *term = malloc(sizeof(Parser_term));
+    term->integer = NULL;
+    term->string = NULL;
+    term->keyword_value = PARSER_TERM_KEYWORD_UNDEFINED;
+    term->var_usage = NULL;
+    term->subroutine_call = NULL;
+    term->parenthesized_expression = NULL;
+    term->sub_term = NULL;
+    return term;
 }
 
 static Tokenizer_atom consume_atom()

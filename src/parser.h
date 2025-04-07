@@ -95,6 +95,7 @@ struct Parser_term {
     char *string;
     Parser_term_keyword_constant keyword_value;
     Parser_term_var_usage *var_usage;
+    Parser_term_subroutine_call *subroutine_call;
     Parser_expression *parenthesized_expression;
     Parser_sub_term *sub_term;
 };
@@ -106,7 +107,7 @@ struct Parser_expression {
 };
 
 typedef struct {
-    Parser_expression *subroutine_call;
+    Parser_expression subroutine_call;
 } Parser_do_statement;
 
 typedef struct {
