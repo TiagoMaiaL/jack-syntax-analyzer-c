@@ -118,7 +118,7 @@ typedef struct {
 } Parser_let_statement;
 
 typedef struct {
-    Parser_expression *conditional;
+    Parser_expression conditional;
     LL_List conditional_statements;
     bool has_else;
     LL_List else_statements;

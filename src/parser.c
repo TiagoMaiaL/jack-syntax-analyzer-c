@@ -13,12 +13,12 @@ static void parse_params_list(Parser_subroutine_dec *subroutine);
 
 static void parse_var_decs(Parser_subroutine_dec *subroutine);
 
-static void parse_statements(Parser_subroutine_dec *subroutine);
-static void parse_do(Parser_subroutine_dec *subroutine);
-static void parse_let(Parser_subroutine_dec *subroutine);
-static void parse_if(Parser_subroutine_dec *subroutine);
-static void parse_while(Parser_subroutine_dec *subroutine);
-static void parse_return(Parser_subroutine_dec *subroutine);
+static void parse_statements(LL_List *statements);
+static void parse_do(LL_List *statements);
+static void parse_let(LL_List *statements);
+static void parse_if(LL_List *statements);
+static void parse_while(LL_List *statements);
+static void parse_return(LL_List *statements);
 static Parser_statement make_empty_statement();
 
 static Parser_expression parse_expression();
@@ -207,7 +207,7 @@ static void parse_subroutines(Parser_class_dec *class)
     free(current_atom.value);
 
     parse_var_decs(&subroutine);
-    parse_statements(&subroutine);
+    parse_statements(&subroutine.statements);
 
     consume_atom();
     expect(
@@ -319,32 +319,33 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine)
     parse_var_decs(subroutine);
 }
 
-static void parse_statements(Parser_subroutine_dec *subroutine)
+static void parse_statements(LL_List *statements_list)
 {
     Tokenizer_atom peek = peek_atom();
     free(peek.value);
 
     if (peek.keyword == TK_KEYWORD_LET) {
-        parse_let(subroutine);    
+        parse_let(statements_list);    
 
     } else if (peek.keyword == TK_KEYWORD_IF) {
+        parse_if(statements_list);
 
     } else if (peek.keyword == TK_KEYWORD_WHILE) {
 
     } else if (peek.keyword == TK_KEYWORD_DO) {
-        parse_do(subroutine);
+        parse_do(statements_list);
 
     } else if (peek.keyword == TK_KEYWORD_RETURN) {
-        parse_return(subroutine);
+        parse_return(statements_list);
 
     } else {
         return;
     }
 
-    parse_statements(subroutine);
+    parse_statements(statements_list);
 }
 
-static void parse_let(Parser_subroutine_dec *subroutine)
+static void parse_let(LL_List *statements)
 {
     Parser_let_statement let_stmt;
 
@@ -401,10 +402,10 @@ static void parse_let(Parser_subroutine_dec *subroutine)
 
     LL_Node *node = ll_make_node(sizeof(Parser_statement));
     *(Parser_statement *)node->data = stmt;
-    ll_append(node, &subroutine->statements);
+    ll_append(node, statements);
 }
 
-static void parse_do(Parser_subroutine_dec *subroutine)
+static void parse_do(LL_List *statements)
 {
     consume_atom();
     free(current_atom.value);
@@ -428,10 +429,10 @@ static void parse_do(Parser_subroutine_dec *subroutine)
 
     LL_Node *statement_node = ll_make_node(sizeof(Parser_statement));
     *(Parser_statement *)statement_node->data = statement;
-    ll_append(statement_node, &subroutine->statements);
+    ll_append(statement_node, statements);
 }
 
-static void parse_return(Parser_subroutine_dec *subroutine)
+static void parse_return(LL_List *statements)
 {
     consume_atom();
     free(current_atom.value);
@@ -463,7 +464,89 @@ static void parse_return(Parser_subroutine_dec *subroutine)
 
     LL_Node *statement_node = ll_make_node(sizeof(Parser_statement));
     *(Parser_statement *)statement_node->data = statement;
-    ll_append(statement_node, &subroutine->statements);
+    ll_append(statement_node, statements);
+}
+
+static void parse_if(LL_List *statements)
+{
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.keyword == TK_KEYWORD_IF,
+        "Expected if keyword in start of if statement"
+    );
+
+    Parser_if_statement if_stmt;
+    if_stmt.has_else = false;
+    if_stmt.conditional_statements = ll_make_empty_list();
+    if_stmt.else_statements = ll_make_empty_list();
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_L_PAREN,
+        "Expected '(' in the beginning of if "
+        "conditional expression"
+    );
+
+    if_stmt.conditional = parse_expression();
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_R_PAREN,
+        "Expected ')' after if conditional expression"
+    );
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_L_CURLY,
+        "Expected '{' at start of if's branch statements"
+    );
+
+    parse_statements(&if_stmt.conditional_statements);
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_R_CURLY,
+        "Expected '}' at end of if's branch statements"
+    );
+
+    Tokenizer_atom peek = peek_atom();
+    free(peek.value);
+
+    if (peek.keyword == TK_KEYWORD_ELSE) {
+        if_stmt.has_else = true;
+
+        consume_atom();
+        free(current_atom.value);
+
+        consume_atom();
+        free(current_atom.value);
+        expect(
+            current_atom.symbol == TK_SYMBOL_L_CURLY,
+            "Expected '{' at start of else's branch statements"
+        );
+
+        parse_statements(&if_stmt.else_statements);
+
+        consume_atom();
+        free(current_atom.value);
+        expect(
+            current_atom.symbol == TK_SYMBOL_R_CURLY,
+            "Expected '}' at end of else's branch statements"
+        );
+    }
+
+    Parser_statement stmt = make_empty_statement();
+    stmt.if_statement = malloc(sizeof(Parser_if_statement));
+    *stmt.if_statement = if_stmt;
+
+    LL_Node *node = ll_make_node(sizeof(Parser_statement));
+    *(Parser_statement *)node->data = stmt;
+    ll_append(node, statements);
 }
 
 static Parser_expression parse_expression()
