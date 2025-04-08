@@ -22,7 +22,6 @@ static void parse_return(LL_List *statements);
 static Parser_statement make_empty_statement();
 
 static Parser_expression parse_expression();
-static void parse_expression_list();
 static Parser_term parse_term();
 static Parser_term_subroutine_call parse_subroutine_call(char *identifier);
 static LL_List parse_expressions_list();
@@ -331,6 +330,7 @@ static void parse_statements(LL_List *statements_list)
         parse_if(statements_list);
 
     } else if (peek.keyword == TK_KEYWORD_WHILE) {
+        parse_while(statements_list);
 
     } else if (peek.keyword == TK_KEYWORD_DO) {
         parse_do(statements_list);
@@ -543,6 +543,60 @@ static void parse_if(LL_List *statements)
     Parser_statement stmt = make_empty_statement();
     stmt.if_statement = malloc(sizeof(Parser_if_statement));
     *stmt.if_statement = if_stmt;
+
+    LL_Node *node = ll_make_node(sizeof(Parser_statement));
+    *(Parser_statement *)node->data = stmt;
+    ll_append(node, statements);
+}
+
+static void parse_while(LL_List *statements)
+{
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.keyword == TK_KEYWORD_WHILE,
+        "Expected while keyword at beginning "
+        "of loop statement"
+    );
+
+    Parser_while_statement while_stmt;
+    while_stmt.statements = ll_make_empty_list();
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_L_PAREN,
+        "Expected '(' at beginning of while conditional"
+    );
+
+    while_stmt.conditional = parse_expression();
+    
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_R_PAREN,
+        "Expected ')' at end of while conditional"
+    );
+
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_L_CURLY,
+        "Expected '{' at beginning of while body"
+    );
+
+    parse_statements(&while_stmt.statements);
+   
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.symbol == TK_SYMBOL_R_CURLY,
+        "Expected '}' at end of while body"
+    );
+
+    Parser_statement stmt = make_empty_statement();
+    stmt.while_statement = malloc(sizeof(Parser_while_statement));
+    *stmt.while_statement = while_stmt;
 
     LL_Node *node = ll_make_node(sizeof(Parser_statement));
     *(Parser_statement *)node->data = stmt;

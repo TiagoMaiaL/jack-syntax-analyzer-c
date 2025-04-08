@@ -125,7 +125,7 @@ typedef struct {
 } Parser_if_statement;
 
 typedef struct {
-    Parser_expression *conditional;
+    Parser_expression conditional;
     LL_List statements;
 } Parser_while_statement;
 
