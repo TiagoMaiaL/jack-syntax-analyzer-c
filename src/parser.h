@@ -77,7 +77,7 @@ typedef enum {
 
 typedef struct {
     char *var_name;
-    LL_List subscript_expressions;
+    Parser_expression *expression;
 } Parser_term_var_usage;
 
 typedef struct {

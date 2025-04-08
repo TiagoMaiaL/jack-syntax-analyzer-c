@@ -25,6 +25,7 @@ static Parser_expression parse_expression();
 static void parse_expression_list();
 static Parser_term parse_term();
 static Parser_term_subroutine_call parse_subroutine_call(char *identifier);
+static LL_List parse_expressions_list();
 static bool is_expression_keyword(Tokenizer_keyword keyword);
 static Parser_term_keyword_constant get_keyword_value(Tokenizer_keyword keyword);
 static bool is_operator(Tokenizer_symbol symbol);
@@ -590,8 +591,7 @@ static Parser_term_subroutine_call parse_subroutine_call(char *identifier)
         "Expected '(' in subroutine call"
     );
 
-    LL_List expressions = ll_make_empty_list();
-    //TODO: parse_expressions_list(&expressions);
+    LL_List expressions = parse_expressions_list();
 
     consume_atom();
     free(current_atom.value);
@@ -608,9 +608,60 @@ static Parser_term_subroutine_call parse_subroutine_call(char *identifier)
     return subroutine_call;
 }
 
+static LL_List parse_expressions_list()
+{
+    LL_List exprs = ll_make_empty_list();
+
+    Tokenizer_atom peak = peak_atom();
+    free(peak.value);
+
+    if (peak.symbol == TK_SYMBOL_R_PAREN) {
+        return exprs;
+    }
+    
+    Parser_expression expr = parse_expression();
+    LL_Node *node = ll_make_node(sizeof(Parser_expression));
+    *(Parser_expression *)node->data = expr;
+    ll_append(node, &exprs);
+
+    peak = peak_atom();
+    free(peak.value);
+
+    while (peak.symbol == TK_SYMBOL_COMMA) {
+        expr = parse_expression();
+        node = ll_make_node(sizeof(Parser_expression));
+        *(Parser_expression *)node->data = expr;
+        ll_append(node, &exprs);
+
+        peak = peak_atom();
+        free(peak.value);
+    }
+
+    return exprs;
+}
+
 static Parser_term_var_usage parse_var_usage()
 {
-    
+    expect(
+        current_atom.type = TK_TYPE_IDENTIFIER,
+        "Expected variable name in expression"
+    );
+
+    Parser_term_var_usage var_usage;
+    var_usage.var_name = current_atom.value;
+
+    Tokenizer_atom peak = peak_atom();
+    free(peak.value);
+
+    if (peak.symbol == TK_SYMBOL_L_BRACK) {
+        consume_atom();
+        free(current_atom.value);
+
+        var_usage.expression = malloc(sizeof(Parser_expression));
+        *var_usage.expression = parse_expression();
+    }
+
+    return var_usage;
 }
 
 static Parser_statement make_empty_statement()
