@@ -348,6 +348,8 @@ static void parse_statements(Parser_subroutine_dec *subroutine)
 
 static void parse_let(Parser_subroutine_dec *subroutine)
 {
+    Parser_let_statement let_stmt;
+
     consume_atom();
     free(current_atom.value);
     expect(
@@ -361,23 +363,47 @@ static void parse_let(Parser_subroutine_dec *subroutine)
         "Expected variable name in assignment"
     );
 
-    char *var_name = current_atom.value;
+    let_stmt.var_name = current_atom.value;
 
     consume_atom();
     free(current_atom.value);
+
+    if (current_atom.symbol == TK_SYMBOL_L_BRACK) {
+        let_stmt.subscript = parse_expression();
+        
+        consume_atom();
+        free(current_atom.value);
+        expect(
+            current_atom.symbol == TK_SYMBOL_R_BRACK,
+            "Expected ']' at end of array subscript "
+            "in variable assignemnt"
+        );
+
+        consume_atom();
+        free(current_atom.value);
+    }
+
     expect(
         current_atom.symbol == TK_SYMBOL_EQUAL,
         "Expected '=' in variable assignment"
     );
-
-    Parser_expression expr = parse_expression();
+    
+    let_stmt.value = parse_expression();
 
     consume_atom();
     free(current_atom.value);
     expect(
         current_atom.symbol == TK_SYMBOL_SEMICOLON,
-        "Expected '=' in variable assignment"
+        "Expected ';' in variable assignment"
     );
+
+    Parser_statement stmt = make_empty_statement();
+    stmt.let_statement = malloc(sizeof(Parser_let_statement));
+    *stmt.let_statement = let_stmt;
+
+    LL_Node *node = ll_make_node(sizeof(Parser_statement));
+    *(Parser_statement *)node->data = stmt;
+    ll_append(node, &subroutine->statements);
 }
 
 static void parse_do(Parser_subroutine_dec *subroutine)

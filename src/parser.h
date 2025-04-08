@@ -113,8 +113,8 @@ typedef struct {
 
 typedef struct {
     char *var_name;
-    Parser_expression *subscript;
-    Parser_expression *value;
+    Parser_expression subscript;
+    Parser_expression value;
 } Parser_let_statement;
 
 typedef struct {
