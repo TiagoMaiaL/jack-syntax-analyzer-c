@@ -130,7 +130,8 @@ typedef struct {
 } Parser_while_statement;
 
 typedef struct {
-    Parser_expression *expression;
+    bool has_expr;
+    Parser_expression expression;
 } Parser_return_statement;
 
 typedef struct {

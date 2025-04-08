@@ -329,15 +329,13 @@ static void parse_statements(Parser_subroutine_dec *subroutine)
 
     } else if (peek.keyword == TK_KEYWORD_IF) {
 
-    } else if (peek.keyword == TK_KEYWORD_ELSE) {
-
     } else if (peek.keyword == TK_KEYWORD_WHILE) {
 
     } else if (peek.keyword == TK_KEYWORD_DO) {
         parse_do(subroutine);
 
     } else if (peek.keyword == TK_KEYWORD_RETURN) {
-
+        parse_return(subroutine);
 
     } else {
         return;
@@ -427,6 +425,41 @@ static void parse_do(Parser_subroutine_dec *subroutine)
         current_atom.symbol == TK_SYMBOL_SEMICOLON,
         "Expected ';' at end of statement."
     );
+
+    LL_Node *statement_node = ll_make_node(sizeof(Parser_statement));
+    *(Parser_statement *)statement_node->data = statement;
+    ll_append(statement_node, &subroutine->statements);
+}
+
+static void parse_return(Parser_subroutine_dec *subroutine)
+{
+    consume_atom();
+    free(current_atom.value);
+    expect(
+        current_atom.keyword == TK_KEYWORD_RETURN,
+        "Expected 'return' kewyord"
+    );
+
+    Parser_return_statement return_stmt;
+    return_stmt.has_expr = false;
+
+    Tokenizer_atom peek = peek_atom();
+    free(peek.value);
+
+    if (peek.symbol != TK_SYMBOL_SEMICOLON) {
+        return_stmt.expression = parse_expression();
+        return_stmt.has_expr = true;
+    }
+
+    consume_atom();
+    expect(
+        current_atom.symbol == TK_SYMBOL_SEMICOLON,
+        "Expected ';' at end of return statement"
+    );
+
+    Parser_statement statement = make_empty_statement();
+    statement.return_statement = malloc(sizeof(Parser_return_statement));
+    *statement.return_statement = return_stmt;
 
     LL_Node *statement_node = ll_make_node(sizeof(Parser_statement));
     *(Parser_statement *)statement_node->data = statement;
