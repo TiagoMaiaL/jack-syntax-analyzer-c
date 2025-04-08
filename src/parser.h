@@ -51,6 +51,7 @@ typedef struct {
 
 typedef struct Parser_expression Parser_expression;
 typedef struct Parser_term Parser_term;
+typedef struct Parser_sub_term Parser_sub_term;
 
 typedef enum {
     PARSER_TERM_OP_ADDITION,
@@ -85,11 +86,6 @@ typedef struct {
     LL_List param_expressions;
 } Parser_term_subroutine_call;
 
-typedef struct {
-    Parser_term_operator unary_op;
-    Parser_term *sub_term;
-} Parser_sub_term;
-
 struct Parser_term {
     char *integer;
     char *string;
@@ -100,10 +96,15 @@ struct Parser_term {
     Parser_sub_term *sub_term;
 };
 
+struct Parser_sub_term {
+    Parser_term_operator unary_op;
+    Parser_term term;
+};
+
+// TODO: Add function to free expression and terms.
 struct Parser_expression {
-    Parser_term *term;
-    Parser_term_operator op;
-    Parser_term *right_term;
+    LL_List terms;
+    LL_List operators;
 };
 
 typedef struct {
