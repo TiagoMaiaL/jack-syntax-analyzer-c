@@ -83,7 +83,7 @@ static char *get_str_constant(bool *is_complete);
 
 static bool tokenize_unexpected_char(Tokenizer_atom *atom);
 
-static char peak();
+static char peek();
 static char get_char();
 static void seek_back(int amount);
 static Tokenizer_atom make_empty_atom();
@@ -149,9 +149,9 @@ Tokenizer_atom tokenizer_next()
     return atom;
 }
 
-Tokenizer_atom tokenizer_peak()
+Tokenizer_atom tokenizer_peek()
 {
-    // TODO: Unit test tokenizer peaking.
+    // TODO: Unit test tokenizer peeking.
     int token_len = 0;
     char ch;
     Tokenizer_atom atom = tokenizer_next();
@@ -198,7 +198,7 @@ static bool tokenize_whitespace(Tokenizer_atom *atom)
     len = 0;
     newlines = 0;
 
-    while(isspace(peak())) {
+    while(isspace(peek())) {
         len++;
         ch = get_char();
 
@@ -309,7 +309,7 @@ static bool tokenize_comment(Tokenizer_atom *atom)
             break;
         }
 
-        if (!is_line_comment && (ch == '*' && peak() == '/')) {
+        if (!is_line_comment && (ch == '*' && peek() == '/')) {
             ch = get_char(); // Move cursor.
             comment_len += 1;
             break;
@@ -346,7 +346,7 @@ static bool tokenize_comment(Tokenizer_atom *atom)
 
 static bool is_in_comment_start(char ch)
 {
-    char next_ch = peak();
+    char next_ch = peek();
     return ch == '/' && (next_ch == '/' || next_ch == '*');
 }
 
@@ -598,7 +598,7 @@ static bool tokenize_unexpected_char(Tokenizer_atom *atom)
     return true;
 }
 
-static char peak()
+static char peek()
 {
     if (state == TK_FINISHED) {
         return EOF;

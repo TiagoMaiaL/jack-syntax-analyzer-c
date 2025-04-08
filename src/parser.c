@@ -36,7 +36,7 @@ static Parser_expression make_empty_expression();
 static Parser_term make_empty_term();
 
 static Tokenizer_atom consume_atom();
-static Tokenizer_atom peak_atom();
+static Tokenizer_atom peek_atom();
 static void expect(bool expression, char *failure_msg);
 static bool is_type(Tokenizer_atom atom);
 static void exit_parsing(char *msg);
@@ -82,10 +82,10 @@ static void parse_class_vars_dec(Parser_class_dec *class)
 {
     bool has_var_decs;
 
-    Tokenizer_atom peak = peak_atom();
-    has_var_decs = peak.keyword == TK_KEYWORD_STATIC || 
-                   peak.keyword == TK_KEYWORD_FIELD;
-    free(peak.value);
+    Tokenizer_atom peek = peek_atom();
+    has_var_decs = peek.keyword == TK_KEYWORD_STATIC || 
+                   peek.keyword == TK_KEYWORD_FIELD;
+    free(peek.value);
 
     if (!has_var_decs) {
         return;
@@ -155,11 +155,11 @@ static void parse_subroutines(Parser_class_dec *class)
 {
     bool has_func_decs;
 
-    Tokenizer_atom peak = peak_atom();
-    has_func_decs = peak.keyword == TK_KEYWORD_FUNCTION || 
-                    peak.keyword == TK_KEYWORD_CONSTRUCTOR ||
-                    peak.keyword == TK_KEYWORD_METHOD;
-    free(peak.value);
+    Tokenizer_atom peek = peek_atom();
+    has_func_decs = peek.keyword == TK_KEYWORD_FUNCTION || 
+                    peek.keyword == TK_KEYWORD_CONSTRUCTOR ||
+                    peek.keyword == TK_KEYWORD_METHOD;
+    free(peek.value);
 
     if (!has_func_decs) {
         return;
@@ -267,10 +267,10 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
 
 static void parse_var_decs(Parser_subroutine_dec *subroutine)
 {
-    Tokenizer_atom peak = peak_atom();
-    free(peak.value);
+    Tokenizer_atom peek = peek_atom();
+    free(peek.value);
 
-    if (peak.keyword != TK_KEYWORD_VAR) {
+    if (peek.keyword != TK_KEYWORD_VAR) {
         return;
     }
 
@@ -321,22 +321,22 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine)
 
 static void parse_statements(Parser_subroutine_dec *subroutine)
 {
-    Tokenizer_atom peak = peak_atom();
-    free(peak.value);
+    Tokenizer_atom peek = peek_atom();
+    free(peek.value);
 
-    if (peak.keyword == TK_KEYWORD_LET) {
+    if (peek.keyword == TK_KEYWORD_LET) {
         parse_let(subroutine);    
 
-    } else if (peak.keyword == TK_KEYWORD_IF) {
+    } else if (peek.keyword == TK_KEYWORD_IF) {
 
-    } else if (peak.keyword == TK_KEYWORD_ELSE) {
+    } else if (peek.keyword == TK_KEYWORD_ELSE) {
 
-    } else if (peak.keyword == TK_KEYWORD_WHILE) {
+    } else if (peek.keyword == TK_KEYWORD_WHILE) {
 
-    } else if (peak.keyword == TK_KEYWORD_DO) {
+    } else if (peek.keyword == TK_KEYWORD_DO) {
         parse_do(subroutine);
 
-    } else if (peak.keyword == TK_KEYWORD_RETURN) {
+    } else if (peek.keyword == TK_KEYWORD_RETURN) {
 
 
     } else {
@@ -428,10 +428,10 @@ static Parser_term parse_term()
         term.keyword_value = get_keyword_value(current_atom.keyword);
 
     } else if (current_atom.type == TK_TYPE_IDENTIFIER) {
-        Tokenizer_atom peak = peak_atom();
-        free(peak.value);
+        Tokenizer_atom peek = peek_atom();
+        free(peek.value);
         
-        if (peak.symbol == TK_SYMBOL_L_PAREN || peak.symbol == TK_SYMBOL_DOT) {
+        if (peek.symbol == TK_SYMBOL_L_PAREN || peek.symbol == TK_SYMBOL_DOT) {
             term.subroutine_call = malloc(sizeof(Parser_term_subroutine_call));
             *term.subroutine_call = parse_subroutine_call(current_atom.value);
 
@@ -562,10 +562,10 @@ static Parser_term_subroutine_call parse_subroutine_call(char *identifier)
         identifier = current_atom.value;
     }
 
-    Tokenizer_atom peak = peak_atom();
-    free(peak.value);
+    Tokenizer_atom peek = peek_atom();
+    free(peek.value);
 
-    if (peak.symbol == TK_SYMBOL_DOT) {
+    if (peek.symbol == TK_SYMBOL_DOT) {
         instance_var_name = identifier;
 
         consume_atom();
@@ -612,10 +612,10 @@ static LL_List parse_expressions_list()
 {
     LL_List exprs = ll_make_empty_list();
 
-    Tokenizer_atom peak = peak_atom();
-    free(peak.value);
+    Tokenizer_atom peek = peek_atom();
+    free(peek.value);
 
-    if (peak.symbol == TK_SYMBOL_R_PAREN) {
+    if (peek.symbol == TK_SYMBOL_R_PAREN) {
         return exprs;
     }
     
@@ -624,17 +624,17 @@ static LL_List parse_expressions_list()
     *(Parser_expression *)node->data = expr;
     ll_append(node, &exprs);
 
-    peak = peak_atom();
-    free(peak.value);
+    peek = peek_atom();
+    free(peek.value);
 
-    while (peak.symbol == TK_SYMBOL_COMMA) {
+    while (peek.symbol == TK_SYMBOL_COMMA) {
         expr = parse_expression();
         node = ll_make_node(sizeof(Parser_expression));
         *(Parser_expression *)node->data = expr;
         ll_append(node, &exprs);
 
-        peak = peak_atom();
-        free(peak.value);
+        peek = peek_atom();
+        free(peek.value);
     }
 
     return exprs;
@@ -649,11 +649,12 @@ static Parser_term_var_usage parse_var_usage()
 
     Parser_term_var_usage var_usage;
     var_usage.var_name = current_atom.value;
+    var_usage.expression = NULL;
 
-    Tokenizer_atom peak = peak_atom();
-    free(peak.value);
+    Tokenizer_atom peek = peek_atom();
+    free(peek.value);
 
-    if (peak.symbol == TK_SYMBOL_L_BRACK) {
+    if (peek.symbol == TK_SYMBOL_L_BRACK) {
         consume_atom();
         free(current_atom.value);
 
@@ -723,13 +724,13 @@ static Tokenizer_atom consume_atom()
     return current_atom;
 }
 
-static Tokenizer_atom peak_atom()
+static Tokenizer_atom peek_atom()
 {
     Tokenizer_atom atom;
     bool should_skip = true;
 
     while(should_skip) {
-        atom = tokenizer_peak();
+        atom = tokenizer_peek();
         should_skip = atom.type == TK_TYPE_COMMENT || 
                       atom.type == TK_TYPE_WHITESPACE;
         if (should_skip)
