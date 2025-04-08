@@ -409,7 +409,36 @@ static void parse_do(Parser_subroutine_dec *subroutine)
 
 static Parser_expression parse_expression()
 {
-    // TODO: Parse terms.
+    Parser_expression expr = make_empty_expression();
+
+    Parser_term term = parse_term();
+    LL_Node *node = ll_make_node(sizeof(Parser_term));
+    *(Parser_term *)node->data = term;
+    ll_append(node, &expr.terms);
+
+    Tokenizer_atom peek = peek_atom();
+    free(peek.value);
+
+    while (is_operator(peek.symbol)) {
+        consume_atom();
+        free(current_atom.value);
+
+        Parser_term_operator op;
+        op = get_operator(current_atom.symbol);
+        node = ll_make_node(sizeof(Parser_term_operator));
+        *(Parser_term_operator *)node->data = op;
+        ll_append(node, &expr.operators);
+
+        Parser_term term = parse_term();
+        LL_Node *node = ll_make_node(sizeof(Parser_term));
+        *(Parser_term *)node->data = term;
+        ll_append(node, &expr.terms);
+
+        peek = peek_atom();
+        free(peek.value);
+    }
+
+    return expr;
 }
 
 static Parser_term parse_term()
