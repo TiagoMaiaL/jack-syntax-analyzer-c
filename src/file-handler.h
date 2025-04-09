@@ -1,5 +1,5 @@
 #include <stdio.h>
 
-FILE* file_open(const char *path);
-// TODO: Add function to write to a file.
+FILE *file_open(const char *path);
+void write(const char *str, FILE *file);
 
