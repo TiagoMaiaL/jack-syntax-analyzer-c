@@ -187,10 +187,16 @@ void test_parsing_func_body_with_statements()
 {
     Parser_class_dec class;
     Parser_subroutine_dec subroutine;
+
     Parser_statement stmt;
     Parser_do_statement do_stmt;
     Parser_let_statement let_stmt;
+    Parser_if_statement if_stmt;
+    Parser_while_statement while_stmt;
     Parser_return_statement return_stmt;
+
+    Parser_expression expr;
+    Parser_term term;
     Parser_term_subroutine_call call;
 
     test_file_handle = prepare_test_file(
@@ -228,7 +234,51 @@ void test_parsing_func_body_with_statements()
         "class Foo {\n"
         "  method int some_method() {\n"
         "    let x = func_call();\n"
-        "    let y[1] = call();\n"
+        "    let y[1324] = call();\n"
+        "  }\n"
+        "}"
+    );
+
+    class = parser_parse(test_file_handle).class_dec;
+    subroutine = *(Parser_subroutine_dec *)class.subroutines.head->data;
+
+    stmt = *(Parser_statement *)subroutine.statements.head->data;
+    let_stmt = *stmt.let_statement;
+    expr = let_stmt.value;
+    term = *(Parser_term *)expr.terms.head->data;
+
+    tst_true(subroutine.statements.count == 2);
+
+    tst_true(strcmp(let_stmt.var_name, "x") == 0);
+    tst_true(term.subroutine_call != NULL);
+    tst_true(term.subroutine_call->instance_var_name == NULL);
+    tst_true(strcmp(term.subroutine_call->subroutine_name, "func_call") == 0);
+
+
+    stmt = *(Parser_statement *)subroutine.statements.tail->data;
+    let_stmt = *stmt.let_statement;
+    expr = let_stmt.value;
+    term = *(Parser_term *)expr.terms.head->data;
+
+    tst_true(strcmp(let_stmt.var_name, "y") == 0);
+    tst_true(term.subroutine_call != NULL);
+    tst_true(term.subroutine_call->instance_var_name == NULL);
+    tst_true(strcmp(term.subroutine_call->subroutine_name, "call") == 0);
+
+    expr = let_stmt.subscript;
+    term = *(Parser_term *)expr.terms.head->data;
+    tst_true(term.integer != NULL);
+    tst_true(strcmp(term.integer, "1324") == 0);
+
+
+    test_file_handle = prepare_test_file(
+        TEST_FILE_NAME, 
+        "class Foo {\n"
+        "  method int some_method() {\n"
+        "    if (true | false & var_name | 123) {\n"
+        "      do test.something();\n"
+        "    }\n"
+        "    return 1000 + 2000 * 12 / 1;\n"
         "  }\n"
         "}"
     );
@@ -239,20 +289,61 @@ void test_parsing_func_body_with_statements()
     tst_true(subroutine.statements.count == 2);
 
     stmt = *(Parser_statement *)subroutine.statements.head->data;
-    let_stmt = *stmt.let_statement;
-    char *func_name = let_stmt.value->term->subroutine_call->subroutine_name;
+    if_stmt = *stmt.if_statement;
+    expr = if_stmt.conditional;
 
-    tst_true(strcmp(let_stmt.var_name, "x") == 0);
-    tst_true(let_stmt.subscript == NULL);
-    tst_true(strcmp(func_name, "func_call") == 0);
+    tst_true(expr.terms.count == 4);
+    tst_true(expr.operators.count == 3);
+
+    term = *(Parser_term *)expr.terms.head->data;
+    tst_true(term.keyword_value == PARSER_TERM_KEYWORD_TRUE);
+    term = *(Parser_term *)expr.terms.head->next->data;
+    tst_true(term.keyword_value == PARSER_TERM_KEYWORD_FALSE);
+    term = *(Parser_term *)expr.terms.head->next->next->data;
+    tst_true(strcmp(term.var_usage->var_name, "var_name") == 0);
+    term = *(Parser_term *)expr.terms.tail->data;
+    tst_true(strcmp(term.integer, "123") == 0);
+
+    Parser_term_operator op = *(Parser_term_operator *)expr.operators.head->data;
+    tst_true(op == PARSER_TERM_OP_OR);
+    op = *(Parser_term_operator *)expr.operators.head->next->data;
+    tst_true(op == PARSER_TERM_OP_AND);
+    op = *(Parser_term_operator *)expr.operators.tail->data;
+    tst_true(op == PARSER_TERM_OP_OR);
+
+    Parser_statement do_wrapper = *(Parser_statement *)if_stmt.conditional_statements.head->data;
+    call = do_wrapper.do_statement->subroutine_call;
+
+    tst_true(strcmp(call.instance_var_name, "test") == 0);
+    tst_true(strcmp(call.subroutine_name, "something") == 0);
+
 
     stmt = *(Parser_statement *)subroutine.statements.tail->data;
-    let_stmt = *stmt.let_statement;
-    func_name = let_stmt.value->term->subroutine_call->subroutine_name;
 
-    tst_true(strcmp(let_stmt.var_name, "y") == 0);
-    tst_true(strcmp(let_stmt.subscript->term->integer, "1") == 0);
-    tst_true(strcmp(func_name, "call") == 0);
+    tst_true(stmt.return_statement != NULL);
+
+    return_stmt = *stmt.return_statement;
+    expr = return_stmt.expression;
+    
+    tst_true(return_stmt.has_expr);
+    tst_true(expr.terms.count == 4);
+    tst_true(expr.operators.count == 3);
+
+    term = *(Parser_term *)expr.terms.head->data;
+    tst_true(strcmp(term.integer, "1000") == 0);
+    term = *(Parser_term *)expr.terms.head->next->data;
+    tst_true(strcmp(term.integer, "2000") == 0);
+    term = *(Parser_term *)expr.terms.head->next->next->data;
+    tst_true(strcmp(term.integer, "12") == 0);
+    term = *(Parser_term *)expr.terms.tail->data;
+    tst_true(strcmp(term.integer, "1") == 0);
+
+    op = *(Parser_term_operator *)expr.operators.head->data;
+    tst_true(op == PARSER_TERM_OP_ADDITION);
+    op = *(Parser_term_operator *)expr.operators.head->next->data;
+    tst_true(op == PARSER_TERM_OP_MULTIPLICATION);
+    op = *(Parser_term_operator *)expr.operators.tail->data;
+    tst_true(op == PARSER_TERM_OP_DIVISION);
 
     erase_test_file(test_file_handle, TEST_FILE_NAME);
 }
