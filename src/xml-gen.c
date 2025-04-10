@@ -38,8 +38,9 @@ bool is_type_keyword(char *type);
 char *term_keyword_value(Parser_term_keyword_constant keyword);
 char *term_operator_value(Parser_term_operator op);
 
-void xml_gen(FILE *file, Parser_jack_syntax file_syntax)
+void xml_gen(FILE *file_handle, Parser_jack_syntax file_syntax)
 {
+    file = file_handle;
     write_class(file_syntax.class_dec);
 }
 
@@ -429,7 +430,7 @@ void write_symbol(char *desc, short level)
 void write_entry(char *tag_desc, char *val_desc, short level)
 {
     write_tag(tag_desc, false, level); file_write(" ", file);
-    file_write(tag_desc, file); 
+    file_write(val_desc, file); 
     file_write(" ", file); write_tag(tag_desc, true, 0);
     write_ln();
 }
@@ -447,7 +448,7 @@ void write_tag(char *tag_desc, bool is_closing, short level)
 
 void write_indentation(short level)
 {
-    assert(level > 0);
+    assert(level >= 0);
     short whitespaces = level * 2;
     for (short i = 0; i < whitespaces; i++) {
         file_write(" ", file);

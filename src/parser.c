@@ -351,11 +351,11 @@ static void parse_let(LL_List *statements)
     let_stmt.has_subscript = false;
 
     consume_atom();
-    free(current_atom.value);
     expect(
         current_atom.keyword == TK_KEYWORD_LET,
         "Expected let keyword in variable assignemnt"
     );
+    free(current_atom.value);
 
     consume_atom();
     expect(
@@ -373,12 +373,12 @@ static void parse_let(LL_List *statements)
         let_stmt.subscript = parse_expression();
         
         consume_atom();
-        free(current_atom.value);
         expect(
             current_atom.symbol == TK_SYMBOL_R_BRACK,
             "Expected ']' at end of array subscript "
             "in variable assignemnt"
         );
+        free(current_atom.value);
 
         consume_atom();
         free(current_atom.value);
@@ -392,11 +392,11 @@ static void parse_let(LL_List *statements)
     let_stmt.value = parse_expression();
 
     consume_atom();
-    free(current_atom.value);
     expect(
         current_atom.symbol == TK_SYMBOL_SEMICOLON,
         "Expected ';' in variable assignment"
     );
+    free(current_atom.value);
 
     Parser_statement stmt = make_empty_statement();
     stmt.let_statement = malloc(sizeof(Parser_let_statement));
@@ -887,6 +887,12 @@ static Parser_term_var_usage parse_var_usage()
 
         var_usage.expression = malloc(sizeof(Parser_expression));
         *var_usage.expression = parse_expression();
+
+        consume_atom();
+        expect(
+            current_atom.symbol == TK_SYMBOL_R_BRACK,
+            "Expected ']' at end of var usage subscript"
+        );
     }
 
     return var_usage;
