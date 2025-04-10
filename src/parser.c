@@ -845,23 +845,26 @@ static LL_List parse_expressions_list()
     if (peek.symbol == TK_SYMBOL_R_PAREN) {
         return exprs;
     }
-    
-    Parser_expression expr = parse_expression();
-    LL_Node *node = ll_make_node(sizeof(Parser_expression));
-    *(Parser_expression *)node->data = expr;
-    ll_append(node, &exprs);
 
-    peek = peek_atom();
-    free(peek.value);
+    while (true) {
+        Parser_expression expr = parse_expression();
 
-    while (peek.symbol == TK_SYMBOL_COMMA) {
-        expr = parse_expression();
-        node = ll_make_node(sizeof(Parser_expression));
+        LL_Node *node = ll_make_node(sizeof(Parser_expression));
         *(Parser_expression *)node->data = expr;
         ll_append(node, &exprs);
 
         peek = peek_atom();
         free(peek.value);
+
+        if (peek.symbol == TK_SYMBOL_R_PAREN) {
+            break;
+        } else {
+            consume_atom();
+            expect(
+                current_atom.symbol == TK_SYMBOL_COMMA,
+                "Expected ',' delimiter in expression list"
+            );
+        }
     }
 
     return exprs;
