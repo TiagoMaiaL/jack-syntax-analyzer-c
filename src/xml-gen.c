@@ -212,8 +212,9 @@ void write_statements(LL_List statements, short level)
     write_tag("statements", false, level); write_ln();
 
     LL_Node *statement_node = statements.head;
-    Parser_statement statement = *(Parser_statement *)statement_node->data;
     while (statement_node != NULL) {
+        Parser_statement statement = *(Parser_statement *)statement_node->data;
+
         if (statement.do_statement != NULL) {
             write_do(*statement.do_statement, level + 1);
 
