@@ -132,7 +132,7 @@ void write_parameter_list(LL_List params, short level)
     write_tag("parameterList", false, level - 1); write_ln();
 
     LL_Node *param = params.head;
-    while(param != NULL) {
+    while (param != NULL) {
         Parser_param val = *(Parser_param *)param->data;
 
         if (is_type_keyword(val.type_name)) {
@@ -170,6 +170,34 @@ void write_vars(LL_List vars, short level)
         return;
     }
 
+    LL_Node *var = vars.head;
+    while (var != NULL) {
+        Parser_var_dec val = *(Parser_var_dec *)var->data;
+
+        write_tag("statements", false, level - 1); write_ln();
+        write_keyword("var", level + 1);
+
+        if (is_type_keyword(val.type_name)) {
+            write_keyword(val.type_name, level);
+        } else {
+            write_keyword(val.type_name, level);
+        }
+
+        LL_Node *name = val.names.head;
+        while (name != NULL) {
+            write_identifier((char *)name->data, level + 1);
+
+            if (name->next != NULL) {
+                write_symbol(",", level);
+            }
+
+            name = name->next;
+        }
+
+        write_tag("varDec", true, level - 1); write_ln();
+
+        var = var->next;
+    }
 }
 
 void write_statements(LL_List statements, short level)
@@ -182,7 +210,7 @@ void write_statements(LL_List statements, short level)
 
     LL_Node *statement_node = statements.head;
     Parser_statement statement = *(Parser_statement *)statement_node->data;
-    while(statement_node != NULL) {
+    while (statement_node != NULL) {
         if (statement.do_statement != NULL) {
             write_do(*statement.do_statement, level);
 
@@ -212,7 +240,7 @@ void write_do(Parser_do_statement do_stmt, short level)
 {
     write_tag("doStatement", false, level - 1); write_ln();
     write_keyword("do", level + 1);
-    write_subroutine_call(do_stmt.subroutine_call, level + 1);
+    write_subroutine_call(do_stmt.subroutine_call, level);
     write_symbol(";", level + 1);
     write_tag("doStatement", true, level - 1); write_ln();
 }
@@ -293,7 +321,7 @@ void write_expression(Parser_expression expr, short level)
     
     LL_Node *term = expr.terms.head;
     LL_Node *op = expr.operators.head;
-    while(term != NULL) {
+    while (term != NULL) {
         write_term(*(Parser_term *)term->data, level + 1);
 
         if (op != NULL) {
@@ -324,7 +352,7 @@ void write_term(Parser_term term, short level)
     }
 
     if (term.var_usage != NULL) {
-        write_entry("identifier", term.var_usage->var_name, level + 1);
+        write_identifier(term.var_usage->var_name, level + 1);
         if (term.var_usage->expression != NULL) {
             write_symbol("[", level + 1);
             write_expression(*term.var_usage->expression, level + 1);
@@ -357,11 +385,13 @@ void write_operator(Parser_term_operator op, short level)
 
 void write_subroutine_call(Parser_term_subroutine_call call, short level)
 {
+    // TODO: Check how to deal with subroutine call:
+    // statement vs. term
     if (call.instance_var_name != NULL) {
         write_entry("identifier", call.instance_var_name, level + 1);
         write_symbol(".", level + 1);
     }
-    write_entry("identifier", call.subroutine_name, level + 1);
+    write_identifier(call.subroutine_name, level + 1);
     write_symbol("(", level + 1);
     if (call.param_expressions.count > 0) {
         LL_Node *param = call.param_expressions.head;
@@ -370,7 +400,9 @@ void write_subroutine_call(Parser_term_subroutine_call call, short level)
 
         while(param != NULL) {
             write_expression(*(Parser_expression *)param->data, level + 1);
-            write_symbol(",", level + 1);
+            if (param->next != NULL) {
+                write_symbol(",", level + 1);
+            }
             param = param->next;
         }
 
