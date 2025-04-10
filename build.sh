@@ -15,6 +15,7 @@ source_files=(
     '../src/tokenizer.c'
     '../src/parser.c'
     '../src/linked-list.c'
+    '../src/xml-gen.c'
 )
 
 files=("${source_files[@]}")

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "file-handler.h"
 #include "parser.h"
+#include "xml-gen.h"
 
 #define SUCCESS_CODE    0
 #define ERROR_CODE      -1

@@ -1,3 +1,6 @@
+#ifndef PARSER_H
+#define PARSER_H
+
 #include <stdbool.h>
 #include <stdio.h>
 #include "linked-list.h"
@@ -77,7 +80,7 @@ typedef enum {
 
 typedef struct {
     char *var_name;
-    Parser_expression *expression;
+    Parser_expression *expression; // TODO: Rename this to subscript
 } Parser_term_var_usage;
 
 typedef struct {
@@ -113,6 +116,7 @@ typedef struct {
 
 typedef struct {
     char *var_name;
+    bool has_subscript;
     Parser_expression subscript;
     Parser_expression value;
 } Parser_let_statement;
@@ -144,3 +148,4 @@ typedef struct {
 
 Parser_jack_syntax parser_parse(FILE *source);
 
+#endif

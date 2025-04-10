@@ -348,6 +348,7 @@ static void parse_statements(LL_List *statements_list)
 static void parse_let(LL_List *statements)
 {
     Parser_let_statement let_stmt;
+    let_stmt.has_subscript = false;
 
     consume_atom();
     free(current_atom.value);
@@ -368,6 +369,7 @@ static void parse_let(LL_List *statements)
     free(current_atom.value);
 
     if (current_atom.symbol == TK_SYMBOL_L_BRACK) {
+        let_stmt.has_subscript = true;
         let_stmt.subscript = parse_expression();
         
         consume_atom();
