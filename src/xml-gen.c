@@ -115,11 +115,11 @@ void write_subroutine(Parser_subroutine_dec subroutine, short level)
 
     write_identifier(subroutine.name, level + 1);
 
-    write_symbol("(", level);
+    write_symbol("(", level + 1);
     write_parameter_list(subroutine.params, level + 1);
-    write_symbol(")", level);
+    write_symbol(")", level + 1);
 
-    write_subroutine_body(subroutine, level);
+    write_subroutine_body(subroutine, level + 1);
 
     write_tag("subroutineDec", true, level); write_ln();
 }
@@ -130,39 +130,39 @@ void write_parameter_list(LL_List params, short level)
         return;
     }
 
-    write_tag("parameterList", false, level - 1); write_ln();
+    write_tag("parameterList", false, level); write_ln();
 
     LL_Node *param = params.head;
     while (param != NULL) {
         Parser_param val = *(Parser_param *)param->data;
 
         if (is_type_keyword(val.type_name)) {
-            write_keyword(val.type_name, level);
+            write_keyword(val.type_name, level + 1);
         } else {
-            write_keyword(val.type_name, level);
+            write_keyword(val.type_name, level + 1);
         }
-        write_identifier(val.name, level);
+        write_identifier(val.name, level + 1);
         
         if (param->next != NULL) {
-            write_symbol(",", level);
+            write_symbol(",", level + 1);
         }
 
         param = param->next;
     }
 
-    write_tag("parameterList", true, level - 1); write_ln();
+    write_tag("parameterList", true, level); write_ln();
 }
 
 void write_subroutine_body(Parser_subroutine_dec subroutine, short level)
 {
-    write_tag("subroutineBody", false, level - 1); write_ln();
+    write_tag("subroutineBody", false, level); write_ln();
     write_symbol("{", level + 1);
 
     write_vars(subroutine.vars, level + 1);
     write_statements(subroutine.statements, level + 1);
 
     write_symbol("}", level + 1);
-    write_tag("subroutineBody", true, level - 1); write_ln();
+    write_tag("subroutineBody", true, level); write_ln();
 }
 
 void write_vars(LL_List vars, short level)
@@ -175,13 +175,13 @@ void write_vars(LL_List vars, short level)
     while (var != NULL) {
         Parser_var_dec val = *(Parser_var_dec *)var->data;
 
-        write_tag("statements", false, level - 1); write_ln();
+        write_tag("varDec", false, level); write_ln();
         write_keyword("var", level + 1);
 
         if (is_type_keyword(val.type_name)) {
-            write_keyword(val.type_name, level);
+            write_keyword(val.type_name, level + 1);
         } else {
-            write_keyword(val.type_name, level);
+            write_identifier(val.type_name, level + 1);
         }
 
         LL_Node *name = val.names.head;
@@ -189,13 +189,15 @@ void write_vars(LL_List vars, short level)
             write_identifier((char *)name->data, level + 1);
 
             if (name->next != NULL) {
-                write_symbol(",", level);
+                write_symbol(",", level + 1);
             }
 
             name = name->next;
         }
 
-        write_tag("varDec", true, level - 1); write_ln();
+        write_symbol(";", level + 1);
+
+        write_tag("varDec", true, level); write_ln();
 
         var = var->next;
     }
@@ -207,25 +209,25 @@ void write_statements(LL_List statements, short level)
         return;
     }
 
-    write_tag("statements", false, level - 1); write_ln();
+    write_tag("statements", false, level); write_ln();
 
     LL_Node *statement_node = statements.head;
     Parser_statement statement = *(Parser_statement *)statement_node->data;
     while (statement_node != NULL) {
         if (statement.do_statement != NULL) {
-            write_do(*statement.do_statement, level);
+            write_do(*statement.do_statement, level + 1);
 
         } else if (statement.let_statement != NULL) {
-            write_let(*statement.let_statement, level);
+            write_let(*statement.let_statement, level + 1);
 
         } else if (statement.if_statement != NULL) {
-            write_if(*statement.if_statement, level);
+            write_if(*statement.if_statement, level + 1);
 
         } else if (statement.while_statement != NULL) {
-            write_while(*statement.while_statement, level);
+            write_while(*statement.while_statement, level + 1);
 
         } else if (statement.return_statement != NULL) {
-            write_return(*statement.return_statement, level);
+            write_return(*statement.return_statement, level + 1);
 
         } else {
             assert(false);
@@ -234,21 +236,21 @@ void write_statements(LL_List statements, short level)
         statement_node = statement_node->next;
     }
 
-    write_tag("statements", true, level - 1); write_ln();
+    write_tag("statements", true, level); write_ln();
 }
 
 void write_do(Parser_do_statement do_stmt, short level)
 {
-    write_tag("doStatement", false, level - 1); write_ln();
+    write_tag("doStatement", false, level); write_ln();
     write_keyword("do", level + 1);
     write_subroutine_call(do_stmt.subroutine_call, level);
     write_symbol(";", level + 1);
-    write_tag("doStatement", true, level - 1); write_ln();
+    write_tag("doStatement", true, level); write_ln();
 }
 
 void write_let(Parser_let_statement let_stmt, short level)
 {
-    write_tag("letStatement", false, level - 1); write_ln();
+    write_tag("letStatement", false, level); write_ln();
     write_keyword("let", level + 1);
     write_identifier(let_stmt.var_name, level + 1);
     write_symbol("=", level + 1);
@@ -259,12 +261,12 @@ void write_let(Parser_let_statement let_stmt, short level)
     }
     write_expression(let_stmt.value, level + 1);
     write_symbol(";", level + 1);
-    write_tag("letStatement", true, level - 1); write_ln();
+    write_tag("letStatement", true, level); write_ln();
 }
 
 void write_if(Parser_if_statement if_stmt, short level)
 {
-    write_tag("ifStatement", false, level - 1); write_ln();
+    write_tag("ifStatement", false, level); write_ln();
 
     write_keyword("if", level + 1);
     write_symbol("(", level + 1);
@@ -282,12 +284,12 @@ void write_if(Parser_if_statement if_stmt, short level)
         write_symbol("}", level + 1);
     }
 
-    write_tag("ifStatement", true, level - 1); write_ln();
+    write_tag("ifStatement", true, level); write_ln();
 }
 
 void write_while(Parser_while_statement while_stmt, short level)
 {
-    write_tag("whileStatement", false, level - 1); write_ln();
+    write_tag("whileStatement", false, level); write_ln();
 
     write_keyword("while", level + 1);
     write_symbol("(", level + 1);
@@ -298,18 +300,18 @@ void write_while(Parser_while_statement while_stmt, short level)
     write_statements(while_stmt.statements, level + 1);
     write_symbol("}", level + 1);
    
-    write_tag("whileStatement", true, level - 1); write_ln();
+    write_tag("whileStatement", true, level); write_ln();
 }
 
 void write_return(Parser_return_statement return_stmt, short level)
 {
-    write_tag("returnStatement", false, level - 1); write_ln();
+    write_tag("returnStatement", false, level); write_ln();
     write_keyword("return", level + 1);
     if (return_stmt.has_expr) {
         write_expression(return_stmt.expression, level + 1);
     }
     write_symbol(";", level + 1);
-    write_tag("returnStatement", true, level - 1); write_ln();
+    write_tag("returnStatement", true, level); write_ln();
 }
 
 void write_expression(Parser_expression expr, short level)
@@ -318,7 +320,7 @@ void write_expression(Parser_expression expr, short level)
         return;
     }
 
-    write_tag("expression", false, level - 1); write_ln();
+    write_tag("expression", false, level); write_ln();
     
     LL_Node *term = expr.terms.head;
     LL_Node *op = expr.operators.head;
@@ -333,12 +335,12 @@ void write_expression(Parser_expression expr, short level)
         term = term->next;
     }
 
-    write_tag("expression", true, level - 1); write_ln();
+    write_tag("expression", true, level); write_ln();
 }
 
 void write_term(Parser_term term, short level)
 {
-    write_tag("term", false, level - 1); write_ln();
+    write_tag("term", false, level); write_ln();
 
     if (term.integer != NULL) {
         write_entry("integerConstant", term.integer, level + 1);
@@ -376,7 +378,7 @@ void write_term(Parser_term term, short level)
         write_term(term.sub_term->term, level + 1);
     }
 
-    write_tag("term", true, level - 1); write_ln();
+    write_tag("term", true, level); write_ln();
 }
 
 void write_operator(Parser_term_operator op, short level)
