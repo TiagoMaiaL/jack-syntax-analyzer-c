@@ -126,10 +126,6 @@ void write_subroutine(Parser_subroutine_dec subroutine, short level)
 
 void write_parameter_list(LL_List params, short level)
 {
-    if (params.count == 0) {
-        return;
-    }
-
     write_tag("parameterList", false, level); write_ln();
 
     LL_Node *param = params.head;
@@ -254,12 +250,12 @@ void write_let(Parser_let_statement let_stmt, short level)
     write_tag("letStatement", false, level); write_ln();
     write_keyword("let", level + 1);
     write_identifier(let_stmt.var_name, level + 1);
-    write_symbol("=", level + 1);
     if (let_stmt.has_subscript) {
         write_symbol("[", level + 1);
         write_expression(let_stmt.subscript, level + 1);
         write_symbol("]", level + 1);
     }
+    write_symbol("=", level + 1);
     write_expression(let_stmt.value, level + 1);
     write_symbol(";", level + 1);
     write_tag("letStatement", true, level); write_ln();
@@ -384,34 +380,31 @@ void write_term(Parser_term term, short level)
 
 void write_operator(Parser_term_operator op, short level)
 {
-    write_symbol(term_operator_value(op), level + 1);
+    write_symbol(term_operator_value(op), level);
 }
 
 void write_subroutine_call(Parser_term_subroutine_call call, short level)
 {
-    // TODO: Check how to deal with subroutine call:
-    // statement vs. term
     if (call.instance_var_name != NULL) {
         write_entry("identifier", call.instance_var_name, level + 1);
         write_symbol(".", level + 1);
     }
     write_identifier(call.subroutine_name, level + 1);
     write_symbol("(", level + 1);
-    if (call.param_expressions.count > 0) {
-        LL_Node *param = call.param_expressions.head;
 
-        write_tag("expressionList", false, level); write_ln(); // TODO: Check indentation
+    write_tag("expressionList", false, level + 1); write_ln();
 
-        while(param != NULL) {
-            write_expression(*(Parser_expression *)param->data, level + 1);
-            if (param->next != NULL) {
-                write_symbol(",", level + 1);
-            }
-            param = param->next;
+    LL_Node *param = call.param_expressions.head;
+    while(param != NULL) {
+        write_expression(*(Parser_expression *)param->data, level + 2);
+        if (param->next != NULL) {
+            write_symbol(",", level + 2);
         }
-
-        write_tag("expressionList", true, level); write_ln(); // TODO: Check indentation
+        param = param->next;
     }
+
+    write_tag("expressionList", true, level + 1); write_ln();
+
     write_symbol(")", level + 1);
 }
 
@@ -475,7 +468,7 @@ char *var_scope_keyword(Parser_class_var_scope scope)
 char *subroutine_scope_keyword(Parser_subroutine_scope scope)
 {
     if (scope == PARSER_FUNC_STATIC) {
-        return "static";
+        return "function";
 
     } else if (scope == PARSER_FUNC_CONSTRUCTOR) {
         return "constructor";
@@ -489,7 +482,8 @@ bool is_type_keyword(char *type)
 {
     return strcmp(type, "int") == 0     ||
            strcmp(type, "char") == 0    ||
-           strcmp(type, "boolean") == 0;
+           strcmp(type, "boolean") == 0 ||
+           strcmp(type, "void") == 0;
 }
 
 char *term_keyword_value(Parser_term_keyword_constant keyword)
