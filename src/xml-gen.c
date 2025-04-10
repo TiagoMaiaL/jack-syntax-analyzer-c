@@ -428,21 +428,21 @@ void write_symbol(char *desc, short level)
 
 void write_entry(char *tag_desc, char *val_desc, short level)
 {
-    write_tag(tag_desc, false, level); write(" ", file);
-    write(tag_desc, file); 
-    write(" ", file); write_tag(tag_desc, true, 0);
+    write_tag(tag_desc, false, level); file_write(" ", file);
+    file_write(tag_desc, file); 
+    file_write(" ", file); write_tag(tag_desc, true, 0);
     write_ln();
 }
 
 void write_tag(char *tag_desc, bool is_closing, short level)
 {
     write_indentation(level);
-    write("<", file); 
+    file_write("<", file); 
     if (is_closing) {
-        write("/", file);
+        file_write("/", file);
     }
-    write(tag_desc, file);
-    write(">", file);
+    file_write(tag_desc, file);
+    file_write(">", file);
 }
 
 void write_indentation(short level)
@@ -450,12 +450,12 @@ void write_indentation(short level)
     assert(level > 0);
     short whitespaces = level * 2;
     for (short i = 0; i < whitespaces; i++) {
-        write(" ", file);
+        file_write(" ", file);
     }
 }
 
 void write_ln() {
-    write("\n", file);
+    file_write("\n", file);
 }
 
 char *var_scope_keyword(Parser_class_var_scope scope)
