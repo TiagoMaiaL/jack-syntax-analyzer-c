@@ -152,6 +152,21 @@ static void test_tokenizing_keywords()
     tst_true(strcmp(atom.value, ".") == 0);
     free(atom.value);
 
+    test_file_handle = prepare_test_file(TEST_FILE_NAME, "class<");
+    tokenizer_start(test_file_handle); 
+
+    atom = tokenizer_next();
+    tst_true(atom.keyword == TK_KEYWORD_CLASS);
+    tst_true(atom.type == TK_TYPE_KEYWORD);
+    tst_true(strcmp(atom.value, "class") == 0);
+    free(atom.value);
+
+    atom = tokenizer_next();
+    tst_true(atom.symbol == TK_SYMBOL_LESS_TH);
+    tst_true(atom.type == TK_TYPE_SYMBOL);
+    tst_true(strcmp(atom.value, "<") == 0);
+    free(atom.value);
+
     atom = tokenizer_next();
     tst_true(tokenizer_finished());
 

@@ -42,6 +42,7 @@ void xml_gen(FILE *file_handle, Parser_jack_syntax file_syntax)
 {
     file = file_handle;
     write_class(file_syntax.class_dec);
+    fh_write("\n", file);
 }
 
 void write_class(Parser_class_dec class)
@@ -91,7 +92,7 @@ void write_class_var(Parser_class_var_dec var_dec, short level)
         write_identifier((char *)name->data, level + 1);
 
         if (name->next != NULL) {
-            write_symbol(",", level);
+            write_symbol(",", level + 1);
         }
 
         name = name->next;
@@ -240,7 +241,7 @@ void write_do(Parser_do_statement do_stmt, short level)
 {
     write_tag("doStatement", false, level); write_ln();
     write_keyword("do", level + 1);
-    write_subroutine_call(do_stmt.subroutine_call, level);
+    write_subroutine_call(do_stmt.subroutine_call, level + 1);
     write_symbol(";", level + 1);
     write_tag("doStatement", true, level); write_ln();
 }
@@ -344,7 +345,16 @@ void write_term(Parser_term term, short level)
     }
 
     if (term.string != NULL) {
-        write_entry("stringConstant", term.string, level + 1);
+        // remove "" from term.
+        char *str = term.string + 1;
+        char ch;
+
+        while ((ch = *str) != '"') {
+            str += 1;
+        }
+        *str = '\0';
+
+        write_entry("stringConstant", term.string + 1, level + 1);
     }
 
     if (term.keyword_value != PARSER_TERM_KEYWORD_UNDEFINED) {
@@ -356,7 +366,7 @@ void write_term(Parser_term term, short level)
         if (term.var_usage->expression != NULL) {
             write_symbol("[", level + 1);
             write_expression(*term.var_usage->expression, level + 1);
-            write_symbol("[", level + 1);
+            write_symbol("]", level + 1);
         }
     }
 
@@ -386,26 +396,26 @@ void write_operator(Parser_term_operator op, short level)
 void write_subroutine_call(Parser_term_subroutine_call call, short level)
 {
     if (call.instance_var_name != NULL) {
-        write_entry("identifier", call.instance_var_name, level + 1);
-        write_symbol(".", level + 1);
+        write_entry("identifier", call.instance_var_name, level);
+        write_symbol(".", level);
     }
-    write_identifier(call.subroutine_name, level + 1);
-    write_symbol("(", level + 1);
+    write_identifier(call.subroutine_name, level);
+    write_symbol("(", level);
 
-    write_tag("expressionList", false, level + 1); write_ln();
+    write_tag("expressionList", false, level); write_ln();
 
     LL_Node *param = call.param_expressions.head;
     while(param != NULL) {
-        write_expression(*(Parser_expression *)param->data, level + 2);
+        write_expression(*(Parser_expression *)param->data, level + 1);
         if (param->next != NULL) {
-            write_symbol(",", level + 2);
+            write_symbol(",", level + 1);
         }
         param = param->next;
     }
 
-    write_tag("expressionList", true, level + 1); write_ln();
+    write_tag("expressionList", true, level); write_ln();
 
-    write_symbol(")", level + 1);
+    write_symbol(")", level);
 }
 
 void write_keyword(char *desc, short level)

@@ -873,7 +873,7 @@ static LL_List parse_expressions_list()
 static Parser_term_var_usage parse_var_usage()
 {
     expect(
-        current_atom.type = TK_TYPE_IDENTIFIER,
+        current_atom.type == TK_TYPE_IDENTIFIER,
         "Expected variable name in expression"
     );
 
