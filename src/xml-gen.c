@@ -42,7 +42,6 @@ void xml_gen(FILE *file_handle, Parser_jack_syntax file_syntax)
 {
     file = file_handle;
     write_class(file_syntax.class_dec);
-    fh_write("\n", file);
 }
 
 void write_class(Parser_class_dec class)

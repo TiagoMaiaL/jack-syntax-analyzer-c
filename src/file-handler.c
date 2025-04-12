@@ -2,7 +2,7 @@
 #include <string.h>
 #include "file-handler.h"
 
-static bool is_jack_file(struct dirent *entry);
+static bool is_jack_file(const char *path);
 
 FILE *fh_open_file(const char *path, const bool create)
 {
@@ -28,12 +28,19 @@ File_handler_jack_proj fh_open_proj(const char *path)
     jack_proj.failed = false;
 
     if (jack_proj.handle == NULL) {
+        if (is_jack_file(path)) {
+            jack_proj.jack_files_count = 1;
+            jack_proj.jack_files_paths = malloc(sizeof(char *));
+            jack_proj.jack_files_paths[0] = (char *)path;
+        } else {
+            jack_proj.failed = true;
+        }
         return jack_proj;
     }
 
     struct dirent *entry;
     while ((entry = readdir(jack_proj.handle)) != NULL) {
-        if (is_jack_file(entry)) {
+        if (entry->d_type == DT_REG && is_jack_file(entry->d_name)) {
             jack_proj.jack_files_count += 1;
         }
     }
@@ -41,6 +48,7 @@ File_handler_jack_proj fh_open_proj(const char *path)
     if (jack_proj.jack_files_count == 0) {
         closedir(jack_proj.handle);
         jack_proj.handle = NULL;
+        jack_proj.failed = true;
         return jack_proj;
     }
 
@@ -50,17 +58,18 @@ File_handler_jack_proj fh_open_proj(const char *path)
     int i = 0;
 
     while ((entry = readdir(jack_proj.handle)) != NULL) {
-        if (!is_jack_file(entry)) {
+        if (!is_jack_file(entry->d_name)) {
             continue;
         }
 
-        int path_size = strlen(path);
+        int path_size = 2;
+        path_size += strlen(path);
         path_size += 1; // slash '/'
         path_size += strlen(entry->d_name);
         path_size += 1;
 
         char *full_path = malloc(sizeof(char) * path_size);
-        sprintf(full_path, "%s/%s", path, entry->d_name);
+        sprintf(full_path, "./%s/%s", path, entry->d_name);
 
         jack_proj.jack_files_paths[i] = full_path;
 
@@ -78,15 +87,10 @@ void fh_close_proj(File_handler_jack_proj *proj)
     proj->handle = NULL;
 }
 
-static bool is_jack_file(struct dirent *entry)
+static bool is_jack_file(const char *path)
 {
-    if (entry->d_type != DT_REG) {
-        return false;
-    }
-
     char *ext = ".jack";
-    char *name = entry->d_name;
-
+    char *name = (char *)path;
     char ch;
 
     while ((ch = *name) != '\0') {
