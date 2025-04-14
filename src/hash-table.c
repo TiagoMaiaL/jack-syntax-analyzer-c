@@ -7,6 +7,8 @@ typedef struct {
     void *data;
 } HT_Entry;
 
+LL_Node *ht_node(const char *key, const HT_Table table);
+
 int ht_hash(const char *key)
 {
     int hash = 0;
@@ -23,29 +25,29 @@ int ht_hash(const char *key)
 
 HT_Table ht_make_empty_table()
 {
-    HT_hash_table table;
+    HT_Table table;
 
     for (short i = 0; i < HT_MAX_COUNT; i++) {
-        table.values[i] = LL_make_empty_list();
+        table.values[i] = ll_make_empty_list();
     }
 
     return table;
 }
 
-int ht_store(const char *key, const void *data, HT_Table table)
+void ht_store(const char *key, const void *data, HT_Table table)
 {
     short index = ht_hash(key);
     LL_Node *node = ht_node(key, table);
 
     HT_Entry entry;
-    entry.key = key;
-    entry.data = data;
+    entry.key = (char *)key;
+    entry.data = (void *)data;
 
     if (node == NULL) {
-        node = ll_make_node(sizeof(HT_Entry);
+        node = ll_make_node(sizeof(HT_Entry));
         *(HT_Entry *)node->data = entry;
 
-        LL_List *list = &table[index];
+        LL_List *list = &table.values[index];
         ll_append(node, list);
 
     } else {

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "parser.h"
+#include "hash-table.h"
 
 static Tokenizer_atom current_atom;
 
