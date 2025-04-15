@@ -60,6 +60,7 @@ void ll_free(LL_List *list)
 
     while (node->next != NULL) {
         next = node->next;
+        free(node->data);
         free(node);
         node = next;
     }

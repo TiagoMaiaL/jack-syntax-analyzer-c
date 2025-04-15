@@ -147,5 +147,6 @@ typedef struct {
 } Parser_statement;
 
 Parser_jack_syntax parser_parse(FILE *source);
+void parser_free(Parser_jack_syntax ast);
 
 #endif

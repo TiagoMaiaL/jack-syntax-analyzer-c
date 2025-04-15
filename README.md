@@ -21,11 +21,13 @@ A Jack syntax analyzer written in C, for the Nand2Tetris course.
 
 ### TODOS
 
+- [ ] Add func to free used memory in AST
 - [ ] Add hash table data structure
 - [ ] Add identifier table
+- [ ] Unit tests identifier table
 - [ ] Replace xml-gen with vm-gen module
 - [ ] Generate code for variables
+- [ ] Generate code for subroutines
 - [ ] Generate code for statements
 - [ ] Generate code for expressions
-- [ ] Generate code for subroutines
 

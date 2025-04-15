@@ -41,6 +41,13 @@ static void expect(bool expression, char *failure_msg);
 static bool is_type(Tokenizer_atom atom);
 static void exit_parsing(char *msg);
 
+void free_class_var(Parser_class_var_dec *var);
+void free_subroutine(Parser_subroutine_dec *subroutine);
+void free_var(Parser_var_dec *var);
+void free_statement(Parser_statement *statement);
+void free_expression(Parser_expression *expression);
+void free_term(Parser_term *term);
+
 Parser_jack_syntax parser_parse(FILE *source) {
     tokenizer_start(source);
 
@@ -1022,5 +1029,188 @@ static void exit_parsing(char *msg)
     );
     printf("%s\n", msg);
     exit(EXIT_FAILURE);
+}
+
+void parser_free(Parser_jack_syntax ast)
+{
+    Parser_class_dec *class = &ast.class_dec;
+    LL_Node *node;
+
+    if (class->vars.count > 0) {
+        node = class->vars.head;
+        while (node != NULL) {
+            free_class_var((Parser_class_var_dec *)node->data);
+            node = node->next;
+        }
+    }
+
+    if (class->subroutines.count > 0) {
+        node = class->subroutines.head;
+        while (node != NULL) {
+            free_subroutine((Parser_subroutine_dec *)node->data);
+            node = node->next;
+        }
+    }
+
+    free(class->name);
+    ll_free(&class->vars);
+    ll_free(&class->subroutines);
+}
+
+void free_class_var(Parser_class_var_dec *var)
+{
+    if (var->names.count > 0) {
+        LL_Node *node = var->names.head;
+        while (node != NULL) {
+            free((char *)node->data);
+            node = node->next;
+        }
+        ll_free(&var->names);
+    }
+
+    free(var->type_name);
+}
+
+void free_subroutine(Parser_subroutine_dec *subroutine)
+{
+    LL_Node *node;
+
+    if (subroutine->params.count > 0) {
+        node = subroutine->params.head;
+        while(node != NULL) {
+            Parser_param *param = (Parser_param *)node->data;
+            free(param->type_name);
+            free(param->name);
+            node = node->next;
+        }
+        ll_free(&subroutine->params);
+    }
+
+    if (subroutine->vars.count > 0) {
+        node = subroutine->vars.head;
+        while(node != NULL) {
+            free_var((Parser_var_dec *)node->data);
+            node = node->next;
+        }
+        ll_free(&subroutine->vars);
+    }
+
+    if (subroutine->statements.count > 0) {
+        node = subroutine->statements.head;
+        while(node != NULL) {
+            free_statement((Parser_statement *)node->data);
+            node = node->next;
+        }
+        ll_free(&subroutine->statements);
+    }
+
+    free(subroutine->name);
+    free(subroutine->type_name);
+}
+
+void free_var(Parser_var_dec *var)
+{
+    if (var->names.count > 0) {
+        LL_Node *node = var->names.head;
+        while (node != NULL) {
+            free((char *)node->data);
+            node = node->next;
+        }
+        ll_free(&var->names);
+    }
+
+    free(var->type_name);
+}
+
+void free_statement(Parser_statement *statement)
+{
+    LL_Node *node;
+
+    if (statement->do_statement != NULL) {
+        Parser_do_statement *do_statement = statement->do_statement;
+        Parser_term_subroutine_call subroutine_call = do_statement->subroutine_call;
+
+        if (subroutine_call.param_expressions.count > 0) {
+            node = subroutine_call.param_expressions.head;
+
+            while (node != NULL) {
+                free_expression((Parser_expression *)node->data);
+                node = node->next;
+            }
+
+            ll_free(&subroutine_call.param_expressions);
+        }
+
+        free(subroutine_call.instance_var_name);
+        free(subroutine_call.subroutine_name);
+        free(do_statement);
+
+    } else if (statement->let_statement != NULL) {
+        Parser_let_statement *let_statement = statement->let_statement;
+        free_expression(&let_statement->subscript);
+        free_expression(&let_statement->value);
+        free(let_statement->var_name);
+        free(let_statement);
+
+    } else if (statement->if_statement != NULL) {
+        Parser_if_statement *if_statement = statement->if_statement;
+
+        if (if_statement->conditional_statements.count > 0) {
+            LL_Node *node = if_statement->conditional_statements.head;
+
+            while (node != NULL) {
+                free_statement((Parser_statement *)node->data);
+                node = node->next;
+            }
+
+            ll_free(&if_statement->conditional_statements);
+        }
+
+        if (if_statement->else_statements.count > 0) {
+            LL_Node *node = if_statement->else_statements.head;
+
+            while (node != NULL) {
+                free_statement((Parser_statement *)node->data);
+                node = node->next;
+            }
+
+            ll_free(&if_statement->else_statements);
+        }
+
+        free_expression(&if_statement->conditional);
+        free(if_statement);
+
+    } else if (statement->while_statement != NULL) {
+        Parser_while_statement *while_statement = statement->while_statement;
+
+        if (while_statement->statements.count > 0) {
+            node = while_statement->statements.head;
+
+            while (node != NULL) {
+                free_statement((Parser_statement *)node->data);
+                node = node->next;
+            }
+
+            ll_free(&while_statement->statements);
+        }
+
+        free_expression(&while_statement->conditional);
+        free(while_statement);
+
+    } else if (statement->return_statement != NULL) {
+        Parser_return_statement *return_statement = statement->return_statement;
+        free_expression(&return_statement->expression);
+        free(return_statement);
+    }
+}
+
+void free_expression(Parser_expression *expression)
+{
+
+}
+
+void free_term(Parser_term *term)
+{
+
 }
 
