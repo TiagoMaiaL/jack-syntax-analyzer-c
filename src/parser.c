@@ -47,6 +47,7 @@ void free_var(Parser_var_dec *var);
 void free_statement(Parser_statement *statement);
 void free_expression(Parser_expression *expression);
 void free_term(Parser_term *term);
+void free_subroutine_call(Parser_term_subroutine_call *subroutine_call);
 
 Parser_jack_syntax parser_parse(FILE *source) {
     tokenizer_start(source);
@@ -1128,21 +1129,7 @@ void free_statement(Parser_statement *statement)
 
     if (statement->do_statement != NULL) {
         Parser_do_statement *do_statement = statement->do_statement;
-        Parser_term_subroutine_call subroutine_call = do_statement->subroutine_call;
-
-        if (subroutine_call.param_expressions.count > 0) {
-            node = subroutine_call.param_expressions.head;
-
-            while (node != NULL) {
-                free_expression((Parser_expression *)node->data);
-                node = node->next;
-            }
-
-            ll_free(&subroutine_call.param_expressions);
-        }
-
-        free(subroutine_call.instance_var_name);
-        free(subroutine_call.subroutine_name);
+        free_subroutine_call(&do_statement->subroutine_call);
         free(do_statement);
 
     } else if (statement->let_statement != NULL) {
@@ -1206,11 +1193,63 @@ void free_statement(Parser_statement *statement)
 
 void free_expression(Parser_expression *expression)
 {
+     if (expression->terms.count > 0) {
+        LL_Node *node = expression->terms.head;
 
+        while (node != NULL) {
+            free_term((Parser_term *)node->data);
+            node = node->next;
+        }
+
+        ll_free(&expression->terms);
+    }
+
+    if (expression->operators.count > 0) {
+        ll_free(&expression->terms);
+    }
 }
 
 void free_term(Parser_term *term)
 {
+    if (term->integer != NULL) {
+        free(term->integer);
 
+    } else if (term->string != NULL) {
+        free(term->string);
+
+    } else if (term->var_usage != NULL) {
+        free(term->var_usage->var_name);
+        free_expression(term->var_usage->expression);
+        free(term->var_usage);
+
+    } else if (term->subroutine_call != NULL) {
+        free_subroutine_call(term->subroutine_call);
+        free(term->subroutine_call);
+
+    } else if (term->parenthesized_expression != NULL) {
+        free_expression(term->parenthesized_expression);
+        free(term->parenthesized_expression);
+
+    } else if (term->sub_term != NULL) {
+        free_term(&term->sub_term->term);
+        free(term->sub_term);
+    }
+}
+
+void free_subroutine_call(Parser_term_subroutine_call *subroutine_call)
+{
+    if (subroutine_call->param_expressions.count > 0) {
+        LL_Node *node = subroutine_call->param_expressions.head;
+
+        while (node != NULL) {
+            free_expression((Parser_expression *)node->data);
+            node = node->next;
+        }
+
+        ll_free(&subroutine_call->param_expressions);
+    }
+
+    free(subroutine_call->instance_var_name);
+    free(subroutine_call->subroutine_name);
 }
 
