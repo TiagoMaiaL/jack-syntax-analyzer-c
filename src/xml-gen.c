@@ -362,9 +362,9 @@ void write_term(Parser_term term, short level)
 
     if (term.var_usage != NULL) {
         write_identifier(term.var_usage->var_name, level + 1);
-        if (term.var_usage->expression != NULL) {
+        if (term.var_usage->subscript != NULL) {
             write_symbol("[", level + 1);
-            write_expression(*term.var_usage->expression, level + 1);
+            write_expression(*term.var_usage->subscript, level + 1);
             write_symbol("]", level + 1);
         }
     }

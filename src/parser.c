@@ -888,7 +888,7 @@ static Parser_term_var_usage parse_var_usage()
 
     Parser_term_var_usage var_usage;
     var_usage.var_name = current_atom.value;
-    var_usage.expression = NULL;
+    var_usage.subscript = NULL;
 
     Tokenizer_atom peek = peek_atom();
     free(peek.value);
@@ -897,8 +897,8 @@ static Parser_term_var_usage parse_var_usage()
         consume_atom();
         free(current_atom.value);
 
-        var_usage.expression = malloc(sizeof(Parser_expression));
-        *var_usage.expression = parse_expression();
+        var_usage.subscript = malloc(sizeof(Parser_expression));
+        *var_usage.subscript = parse_expression();
 
         consume_atom();
         expect(
@@ -1219,7 +1219,7 @@ void free_term(Parser_term *term)
 
     } else if (term->var_usage != NULL) {
         free(term->var_usage->var_name);
-        free_expression(term->var_usage->expression);
+        free_expression(term->var_usage->subscript);
         free(term->var_usage);
 
     } else if (term->subroutine_call != NULL) {

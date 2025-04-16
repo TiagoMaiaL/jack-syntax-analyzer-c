@@ -80,7 +80,7 @@ typedef enum {
 
 typedef struct {
     char *var_name;
-    Parser_expression *expression; // TODO: Rename this to subscript
+    Parser_expression *subscript;
 } Parser_term_var_usage;
 
 typedef struct {
@@ -104,7 +104,6 @@ struct Parser_sub_term {
     Parser_term term;
 };
 
-// TODO: Add function to free expression and terms.
 struct Parser_expression {
     LL_List terms;
     LL_List operators;
