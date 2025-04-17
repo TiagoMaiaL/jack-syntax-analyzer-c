@@ -126,7 +126,8 @@ static void parse_class_vars_dec(Parser_class_dec *class)
         "Expected variable name in declaration"
     );
 
-    LL_Node *name_node = ll_make_node(sizeof(char));
+    LL_Node *name_node = malloc(sizeof(LL_Node));
+    name_node->next = NULL;
     name_node->data = (void *)current_atom.value;
     ll_append(name_node, &var_dec.names);
     
@@ -302,7 +303,8 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine)
         "Expected variable name in declaration"
     );
     while (current_atom.type == TK_TYPE_IDENTIFIER) {
-        LL_Node *name_node = ll_make_node(sizeof(char));
+        LL_Node *name_node = malloc(sizeof(LL_Node));
+        name_node->next = NULL;
         name_node->data = (void *)current_atom.value;
         ll_append(name_node, &var.names);
 
@@ -357,6 +359,7 @@ static void parse_statements(LL_List *statements_list)
 static void parse_let(LL_List *statements)
 {
     Parser_let_statement let_stmt;
+    let_stmt.subscript = make_empty_expression();
     let_stmt.has_subscript = false;
 
     consume_atom();
@@ -453,6 +456,7 @@ static void parse_return(LL_List *statements)
     );
 
     Parser_return_statement return_stmt;
+    return_stmt.expression = make_empty_expression();
     return_stmt.has_expr = false;
 
     Tokenizer_atom peek = peek_atom();
@@ -630,14 +634,13 @@ static Parser_expression parse_expression()
         consume_atom();
         free(current_atom.value);
 
-        Parser_term_operator op;
-        op = get_operator(current_atom.symbol);
+        Parser_term_operator op = get_operator(current_atom.symbol);
         node = ll_make_node(sizeof(Parser_term_operator));
         *(Parser_term_operator *)node->data = op;
         ll_append(node, &expr.operators);
 
         Parser_term term = parse_term();
-        LL_Node *node = ll_make_node(sizeof(Parser_term));
+        node = ll_make_node(sizeof(Parser_term));
         *(Parser_term *)node->data = term;
         ll_append(node, &expr.terms);
 
@@ -1061,14 +1064,8 @@ void parser_free(Parser_jack_syntax ast)
 void free_class_var(Parser_class_var_dec *var)
 {
     if (var->names.count > 0) {
-        LL_Node *node = var->names.head;
-        while (node != NULL) {
-            free((char *)node->data);
-            node = node->next;
-        }
         ll_free(&var->names);
     }
-
     free(var->type_name);
 }
 
@@ -1112,14 +1109,8 @@ void free_subroutine(Parser_subroutine_dec *subroutine)
 void free_var(Parser_var_dec *var)
 {
     if (var->names.count > 0) {
-        LL_Node *node = var->names.head;
-        while (node != NULL) {
-            free((char *)node->data);
-            node = node->next;
-        }
         ll_free(&var->names);
     }
-
     free(var->type_name);
 }
 
@@ -1205,7 +1196,7 @@ void free_expression(Parser_expression *expression)
     }
 
     if (expression->operators.count > 0) {
-        ll_free(&expression->terms);
+        ll_free(&expression->operators);
     }
 }
 
@@ -1219,7 +1210,9 @@ void free_term(Parser_term *term)
 
     } else if (term->var_usage != NULL) {
         free(term->var_usage->var_name);
-        free_expression(term->var_usage->subscript);
+        if (term->var_usage->subscript != NULL) {
+            free_expression(term->var_usage->subscript);
+        }
         free(term->var_usage);
 
     } else if (term->subroutine_call != NULL) {

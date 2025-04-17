@@ -53,19 +53,17 @@ void ll_append(LL_Node *node, LL_List *list)
 
 void ll_free(LL_List *list)
 {
-    LL_Node *node;
-    LL_Node *next;
+    LL_Node *node = NULL;
+    LL_Node *next = NULL;
 
     node = list->head;
 
-    while (node->next != NULL) {
+    while (node != NULL) {
         next = node->next;
         free(node->data);
         free(node);
         node = next;
     }
-
-    free(node);
 
     list->head = NULL;
     list->tail = NULL;

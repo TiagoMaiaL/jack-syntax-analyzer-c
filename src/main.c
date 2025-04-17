@@ -43,6 +43,7 @@ int main(int argc, char **argv)
             
         Parser_jack_syntax file_syntax = parser_parse(jack_file_handle);
         xml_gen(xml_file_handle, file_syntax);
+        parser_free(file_syntax);
 
         fh_close_file(jack_file_handle);
         fh_close_file(xml_file_handle);
