@@ -64,10 +64,10 @@ static TKState state;
 static bool tokenize_whitespace(Tokenizer_atom *atom);
 
 static bool tokenize_symbol(Tokenizer_atom *atom);
-static Tokenizer_symbol get_symbol(char ch);
+static Tokenizer_symbol get_symbol(int ch);
 
 static bool tokenize_comment(Tokenizer_atom *atom);
-static bool is_in_comment_start(char ch);
+static bool is_in_comment_start(int ch);
 
 static bool tokenize_keyword(Tokenizer_atom *atom);
 static Tokenizer_keyword get_keyword(char **val_ref);
@@ -83,8 +83,8 @@ static char *get_str_constant(bool *is_complete);
 
 static bool tokenize_unexpected_char(Tokenizer_atom *atom);
 
-static char peek();
-static char get_char();
+static int peek();
+static int get_char();
 static void seek_back(int amount);
 static Tokenizer_atom make_empty_atom();
 
@@ -153,7 +153,7 @@ Tokenizer_atom tokenizer_peek()
 {
     // TODO: Unit test tokenizer peeking.
     int token_len = 0;
-    char ch;
+    int ch;
     Tokenizer_atom atom = tokenizer_next();
 
     if (atom.value != NULL) {
@@ -192,7 +192,7 @@ static bool tokenize_whitespace(Tokenizer_atom *atom)
 
     int len;
     int newlines;
-    char ch;
+    int ch;
     char *value;
 
     len = 0;
@@ -238,7 +238,7 @@ static bool tokenize_symbol(Tokenizer_atom *atom)
         return false;
     }
 
-    char ch = get_char();
+    int ch = get_char();
 
     if (state == TK_FINISHED) {
         return false;
@@ -263,7 +263,7 @@ static bool tokenize_symbol(Tokenizer_atom *atom)
     return true;
 }
 
-static Tokenizer_symbol get_symbol(char ch) {
+static Tokenizer_symbol get_symbol(int ch) {
     for (int i = 0; i < TK_SYMBOLS_COUNT; i++) {
         if (ch == symbol_chars[i]) {
             return i;
@@ -274,7 +274,7 @@ static Tokenizer_symbol get_symbol(char ch) {
 
 static bool tokenize_comment(Tokenizer_atom *atom)
 {
-    char ch;
+    int ch;
     bool is_line_comment;
     int comment_len;
     int newlines;
@@ -344,7 +344,7 @@ static bool tokenize_comment(Tokenizer_atom *atom)
     return true;
 }
 
-static bool is_in_comment_start(char ch)
+static bool is_in_comment_start(int ch)
 {
     char next_ch = peek();
     return ch == '/' && (next_ch == '/' || next_ch == '*');
@@ -373,7 +373,7 @@ static Tokenizer_keyword get_keyword(char **val_ref)
         return TK_KEYWORD_UNDEFINED;
     }
 
-    char ch;
+    int ch;
     int keyword_len = 0;
     char *keyword_value = NULL;
 
@@ -437,7 +437,7 @@ static char *get_identifier()
     }
 
     char *value;
-    char ch;
+    int ch;
     int len;
 
     value = NULL;
@@ -493,7 +493,7 @@ static bool tokenize_int_constant(Tokenizer_atom *atom)
 
 static char *get_int_constant()
 {
-    char ch;
+    int ch;
     int len;
     char *value;
 
@@ -542,7 +542,7 @@ static bool tokenize_str_constant(Tokenizer_atom *atom)
 
 static char *get_str_constant(bool *is_complete)
 {
-    char ch;
+    int ch;
     int len;
     char *value;
 
@@ -598,13 +598,13 @@ static bool tokenize_unexpected_char(Tokenizer_atom *atom)
     return true;
 }
 
-static char peek()
+static int peek()
 {
     if (state == TK_FINISHED) {
         return EOF;
     }
 
-    char ch = fgetc(source);
+    int ch = fgetc(source);
 
     if (ch != EOF) {
         fseek(source, -1, SEEK_CUR);
@@ -613,13 +613,13 @@ static char peek()
     return ch;
 }
 
-static char get_char()
+static int get_char()
 {
     if (state == TK_FINISHED) {
         return EOF;
     }
 
-    char ch = fgetc(source);
+    int ch = fgetc(source);
 
     if (ch == EOF) {
         if (ferror(source) == 0) {
