@@ -24,7 +24,7 @@ A Jack syntax analyzer written in C, for the Nand2Tetris course.
 - [x] Add func to free used memory in AST
 - [x] Add hash table data structure
 - [ ] Add identifier table
-- [ ] Unit tests identifier table
+- [ ] Unit test identifier table
 - [ ] Add vm-gen module
 - [ ] Generate code for variables
 - [ ] Generate code for subroutines

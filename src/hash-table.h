@@ -11,7 +11,9 @@ typedef struct {
 } HT_Table;
 
 HT_Table ht_make_empty_table();
-void ht_store(const char *key, const void *data, HT_Table table);
-void *ht_value(const char *key, const HT_Table table);
+
+void ht_store(const char *key, const void *data,  HT_Table *table);
+
+void *ht_value(const char *key, const HT_Table *table);
 
 #endif
