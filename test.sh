@@ -13,6 +13,8 @@ source_files=(
     '../src/tokenizer.c'
     '../src/file-handler.c'
     '../src/linked-list.c'
+    '../src/hash-table.c'
+    '../src/id-table.c'
 )
 test_files=(
     '../tests/main.c'
@@ -20,6 +22,7 @@ test_files=(
     '../tests/utils.c'
     '../tests/test-tokenizer.c'
     '../tests/test-parser.c'
+    '../tests/test-id-table.c'
 )
 files=("${source_files[@]}" "${test_files[@]}")
 

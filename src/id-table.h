@@ -11,6 +11,14 @@ typedef enum {
     IDT_FUNC
 } IDT_Type;
 
-void idt_store(const char *id, IDT_Type type, IDT_scope scope);
+typedef struct {
+    char *id;
+    IDT_Type type;
+    IDT_Scope scope;
+} IDT_Entry;
+
+void idt_store(const char *id, IDT_Type type, IDT_Scope scope);
+
+IDT_Entry *idt_entry(const char *id);
 
 #endif

@@ -2,12 +2,6 @@
 #include "id-table.h"
 #include "hash-table.h"
 
-typedef struct {
-    char *id;
-    IDT_Type type;
-    IDT_Scope scope;
-} IDT_Entry;
-
 static HT_Table *table = NULL;
 
 void idt_init()
@@ -25,8 +19,19 @@ void idt_store(const char *id, IDT_Type type, IDT_Scope scope)
     IDT_Entry *entry = malloc(sizeof(IDT_Entry));
     entry->type = type;
     entry->scope = scope;
-    entry->id = id;
+    entry->id = (char *)id;
 
     ht_store(id, (void *)entry, table);
+}
+
+IDT_Entry *idt_entry(const char *id)
+{
+    void *data = ht_value(id, table);
+
+    if (data == NULL) {
+        return NULL;
+    }
+
+    return (IDT_Entry *)data;
 }
 
