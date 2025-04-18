@@ -32,6 +32,14 @@ void test_id_table_usage()
     tst_true(entry->type == IDT_FUNC);
     tst_true(entry->scope == IDT_STATIC);
     tst_true(strcmp(entry->id, "tets") == 0);
+    
+    idt_store("tets", IDT_FUNC, IDT_LOCAL);
+    entry = idt_entry("tets");
+    tst_true(entry != NULL);
+    tst_true(entry->type == IDT_FUNC);
+    tst_true(entry->scope == IDT_LOCAL);
+    tst_true(strcmp(entry->id, "tets") == 0);
+
 
     tst_true(idt_entry("asdf") == NULL);
 }
