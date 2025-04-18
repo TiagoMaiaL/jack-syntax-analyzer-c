@@ -15,7 +15,6 @@ void test_parsing_class_with_vars();
 void test_parsing_class_with_empty_funcs();
 void test_parsing_func_body_with_vars();
 void test_parsing_func_body_with_statements();
-void test_parsing_expr();
 
 void test_parser()
 {
@@ -26,7 +25,6 @@ void test_parser()
     tst_unit("Class with empty funcs", test_parsing_class_with_empty_funcs);
     tst_unit("Func body with vars", test_parsing_func_body_with_vars);
     tst_unit("Func body with statements", test_parsing_func_body_with_statements);
-    tst_unit("Expressions", test_parsing_expr);
 
     tst_suite_finish();
 }
@@ -192,7 +190,6 @@ void test_parsing_func_body_with_statements()
     Parser_do_statement do_stmt;
     Parser_let_statement let_stmt;
     Parser_if_statement if_stmt;
-    Parser_while_statement while_stmt;
     Parser_return_statement return_stmt;
 
     Parser_expression expr;
@@ -346,10 +343,5 @@ void test_parsing_func_body_with_statements()
     tst_true(op == PARSER_TERM_OP_DIVISION);
 
     erase_test_file(test_file_handle, TEST_FILE_NAME);
-}
-
-void test_parsing_expr()
-{
-
 }
 
