@@ -3,7 +3,8 @@
 
 typedef enum {
     IDT_STATIC,
-    IDT_LOCAL
+    IDT_LOCAL,
+    IDT_FIELD
 } IDT_Scope;
 
 typedef enum {

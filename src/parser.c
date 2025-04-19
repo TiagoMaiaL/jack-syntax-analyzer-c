@@ -3,6 +3,7 @@
 #include <string.h>
 #include "parser.h"
 #include "hash-table.h"
+#include "id-table.h"
 
 static Tokenizer_atom current_atom;
 
@@ -34,6 +35,10 @@ static Parser_term_var_usage parse_var_usage();
 static Parser_term_operator get_operator(Tokenizer_symbol symbol);
 static Parser_expression make_empty_expression();
 static Parser_term make_empty_term();
+
+static void store_class_var(char *id, bool is_static);
+static void store_local_var(char *id);
+static void store_func(char *id, bool is_static);
 
 static Tokenizer_atom consume_atom();
 static Tokenizer_atom peek_atom();
@@ -130,6 +135,11 @@ static void parse_class_vars_dec(Parser_class_dec *class)
     name_node->next = NULL;
     name_node->data = (void *)current_atom.value;
     ll_append(name_node, &var_dec.names);
+
+    store_class_var(
+        current_atom.value, 
+        var_dec.scope == PARSER_VAR_STATIC
+    );
     
     consume_atom(); 
     while (current_atom.symbol == TK_SYMBOL_COMMA) {
@@ -143,6 +153,11 @@ static void parse_class_vars_dec(Parser_class_dec *class)
         name_node = ll_make_node(sizeof(char));
         name_node->data = (void *)current_atom.value;
         ll_append(name_node, &var_dec.names);
+
+        store_class_var(
+            current_atom.value, 
+            var_dec.scope == PARSER_VAR_STATIC
+        );
 
         consume_atom();
         free(current_atom.value);
@@ -204,6 +219,11 @@ static void parse_subroutines(Parser_class_dec *class)
         "Expected subroutine name in declaration"
     );
     subroutine.name = current_atom.value; 
+
+    store_func(
+        current_atom.value, 
+        subroutine.scope == PARSER_FUNC_STATIC
+    );
 
     parse_params_list(&subroutine);
 
@@ -307,6 +327,8 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine)
         name_node->next = NULL;
         name_node->data = (void *)current_atom.value;
         ll_append(name_node, &var.names);
+
+        store_local_var(current_atom.value);
 
         consume_atom();
 
@@ -943,6 +965,21 @@ static Parser_term make_empty_term()
     term.parenthesized_expression = NULL;
     term.sub_term = NULL;
     return term;
+}
+
+static void store_class_var(char *id, bool is_static)
+{
+    idt_store(id, IDT_VAR, is_static ? IDT_STATIC : IDT_FIELD);
+}
+
+static void store_local_var(char *id)
+{
+    idt_store(id, IDT_VAR, IDT_LOCAL);
+}
+
+static void store_func(char *id, bool is_static)
+{
+    idt_store(id, IDT_FUNC, is_static ? IDT_STATIC : IDT_LOCAL);
 }
 
 static Tokenizer_atom consume_atom()

@@ -17,6 +17,7 @@ source_files=(
     '../src/linked-list.c'
     '../src/xml-gen.c'
     '../src/hash-table.c'
+    '../src/id-table.c'
 )
 
 files=("${source_files[@]}")
