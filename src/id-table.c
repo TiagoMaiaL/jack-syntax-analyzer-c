@@ -12,12 +12,11 @@ void idt_init()
     }
 }
 
-void idt_store(const char *id, IDT_Type type, IDT_Scope scope)
+void idt_store(const char *id, int index, IDT_Scope scope)
 {
     idt_init();
 
     IDT_Entry *entry = malloc(sizeof(IDT_Entry));
-    entry->type = type;
     entry->scope = scope;
     entry->id = (char *)id;
 

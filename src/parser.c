@@ -38,7 +38,7 @@ static Parser_term make_empty_term();
 
 static void store_class_var(char *id, bool is_static);
 static void store_local_var(char *id);
-static void store_func(char *id, bool is_static);
+static void store_param(char *id);
 
 static Tokenizer_atom consume_atom();
 static Tokenizer_atom peek_atom();
@@ -220,11 +220,6 @@ static void parse_subroutines(Parser_class_dec *class)
     );
     subroutine.name = current_atom.value; 
 
-    store_func(
-        current_atom.value, 
-        subroutine.scope == PARSER_FUNC_STATIC
-    );
-
     parse_params_list(&subroutine);
 
     consume_atom();
@@ -274,6 +269,8 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
             "Expected parameter name in function declaration"
         );
         param.name = current_atom.value;
+
+        store_param(param.name);
         
         LL_Node *param_node = ll_make_node(sizeof(Parser_param));
         *(Parser_param *)param_node->data = param;
@@ -969,17 +966,17 @@ static Parser_term make_empty_term()
 
 static void store_class_var(char *id, bool is_static)
 {
-    idt_store(id, IDT_VAR, is_static ? IDT_STATIC : IDT_FIELD);
+    idt_store(id, 0, is_static ? IDT_STATIC : IDT_FIELD);
 }
 
 static void store_local_var(char *id)
 {
-    idt_store(id, IDT_VAR, IDT_LOCAL);
+    idt_store(id, 0, IDT_LOCAL);
 }
 
-static void store_func(char *id, bool is_static)
+static void store_param(char *id)
 {
-    idt_store(id, IDT_FUNC, is_static ? IDT_STATIC : IDT_LOCAL);
+    idt_store(id, 0, IDT_PARAM);
 }
 
 static Tokenizer_atom consume_atom()
