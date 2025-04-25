@@ -36,11 +36,6 @@ static Parser_term_operator get_operator(Tokenizer_symbol symbol);
 static Parser_expression make_empty_expression();
 static Parser_term make_empty_term();
 
-static char *unique_id_key(char *id, char *scope_id);
-static void store_class_var(char *id, char *scope_id, bool is_static);
-static void store_local_var(char *id, char *scope_id);
-static void store_param(char *id, char *scope_id);
-
 static Tokenizer_atom consume_atom();
 static Tokenizer_atom peek_atom();
 static void expect(bool expression, char *failure_msg);
@@ -137,10 +132,11 @@ static void parse_class_vars_dec(Parser_class_dec *class)
     name_node->data = (void *)current_atom.value;
     ll_append(name_node, &var_dec.names);
 
-    store_class_var(
+    idt_store(
         current_atom.value, 
         class->name,
-        var_dec.scope == PARSER_VAR_STATIC
+        0,
+        var_dec.scope == PARSER_VAR_STATIC ? IDT_STATIC : IDT_FIELD
     );
     
     consume_atom(); 
@@ -156,10 +152,11 @@ static void parse_class_vars_dec(Parser_class_dec *class)
         name_node->data = (void *)current_atom.value;
         ll_append(name_node, &var_dec.names);
 
-        store_class_var(
+        idt_store(
             current_atom.value, 
             class->name,
-            var_dec.scope == PARSER_VAR_STATIC
+            0,
+            var_dec.scope == PARSER_VAR_STATIC ? IDT_STATIC : IDT_FIELD
         );
 
         consume_atom();
@@ -273,7 +270,7 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
         );
         param.name = current_atom.value;
 
-        store_param(param.name, subroutine->name);
+        idt_store(param.name, subroutine->name, 0, IDT_PARAM);
         
         LL_Node *param_node = ll_make_node(sizeof(Parser_param));
         *(Parser_param *)param_node->data = param;
@@ -328,7 +325,7 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine)
         name_node->data = (void *)current_atom.value;
         ll_append(name_node, &var.names);
 
-        store_local_var(current_atom.value, subroutine->name);
+        idt_store(current_atom.value, subroutine->name, 0, IDT_LOCAL);
 
         consume_atom();
 
@@ -965,35 +962,6 @@ static Parser_term make_empty_term()
     term.parenthesized_expression = NULL;
     term.sub_term = NULL;
     return term;
-}
-
-static char *unique_id_key(char *id, char *scope_id)
-{
-    int len = 0;
-    len += strlen(id);
-    len += strlen(scope_id);
-    len += 2; // separator + \0
-
-    char *buffer = malloc(sizeof(char) * len);
-    sprintf(buffer, "%s$%s", id, scope_id);
-
-    return buffer;
-}
-
-static void store_class_var(char *id, char *scope_id, bool is_static)
-{
-    IDT_Category category = is_static ? IDT_STATIC : IDT_FIELD;
-    idt_store(unique_id_key(id, scope_id), 0, category);
-}
-
-static void store_local_var(char *id, char *scope_id)
-{
-    idt_store(unique_id_key(id, scope_id), 0, IDT_LOCAL);
-}
-
-static void store_param(char *id, char *scope_id)
-{
-    idt_store(unique_id_key(id, scope_id), 0, IDT_PARAM);
 }
 
 static Tokenizer_atom consume_atom()
