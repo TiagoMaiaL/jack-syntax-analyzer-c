@@ -6,15 +6,15 @@ typedef enum {
     IDT_LOCAL,
     IDT_FIELD,
     IDT_PARAM
-} IDT_Scope;
+} IDT_Category;
 
 typedef struct {
     char *id;
     int index;
-    IDT_Scope scope;
+    IDT_Category category;
 } IDT_Entry;
 
-void idt_store(const char *id, int index, IDT_Scope scope);
+void idt_store(const char *id, int index, IDT_Category category);
 
 IDT_Entry *idt_entry(const char *id);
 

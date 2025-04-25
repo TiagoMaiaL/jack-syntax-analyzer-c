@@ -12,12 +12,12 @@ void idt_init()
     }
 }
 
-void idt_store(const char *id, int index, IDT_Scope scope)
+void idt_store(const char *id, int index, IDT_Category category)
 {
     idt_init();
 
     IDT_Entry *entry = malloc(sizeof(IDT_Entry));
-    entry->scope = scope;
+    entry->category = category;
     entry->id = (char *)id;
 
     ht_store(id, (void *)entry, table);
