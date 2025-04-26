@@ -33,6 +33,7 @@ void idt_store(
     entry->category = category;
     entry->id = (char *)id;
     entry->key = (char *)key;
+    entry->index = index;
 
     ht_store(key, (void *)entry, table);
 }
