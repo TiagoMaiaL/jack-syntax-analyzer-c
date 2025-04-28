@@ -9,11 +9,11 @@ static Tokenizer_atom current_atom;
 
 static Parser_class_dec parse_class_dec();
 
-static void parse_class_vars_dec(Parser_class_dec *class);
+static void parse_class_vars_dec(Parser_class_dec *class, int static_i, int field_i);
 static void parse_subroutines(Parser_class_dec *class);
 static void parse_params_list(Parser_subroutine_dec *subroutine);
 
-static void parse_var_decs(Parser_subroutine_dec *subroutine);
+static void parse_var_decs(Parser_subroutine_dec *subroutine, int var_i);
 
 static void parse_statements(LL_List *statements);
 static void parse_do(LL_List *statements);
@@ -77,7 +77,7 @@ static Parser_class_dec parse_class_dec()
     expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' symbol expected");
     free(current_atom.value);
     
-    parse_class_vars_dec(&class_dec);
+    parse_class_vars_dec(&class_dec, 0, 0);
     parse_subroutines(&class_dec);
 
     consume_atom();
@@ -87,9 +87,9 @@ static Parser_class_dec parse_class_dec()
     return class_dec;
 }
 
-static void parse_class_vars_dec(Parser_class_dec *class)
+static void parse_class_vars_dec(Parser_class_dec *class, int static_i, int field_i)
 {
-    bool has_var_decs;
+    bool has_var_decs = false;
 
     Tokenizer_atom peek = peek_atom();
     has_var_decs = peek.keyword == TK_KEYWORD_STATIC || 
@@ -135,9 +135,15 @@ static void parse_class_vars_dec(Parser_class_dec *class)
     idt_store(
         current_atom.value, 
         class->name,
-        0,
+        var_dec.scope == PARSER_VAR_STATIC ? static_i : field_i,
         var_dec.scope == PARSER_VAR_STATIC ? IDT_STATIC : IDT_FIELD
     );
+    
+    if (var_dec.scope == PARSER_VAR_STATIC) {
+        static_i++;
+    } else {
+        field_i++;
+    }
     
     consume_atom(); 
     while (current_atom.symbol == TK_SYMBOL_COMMA) {
@@ -155,9 +161,15 @@ static void parse_class_vars_dec(Parser_class_dec *class)
         idt_store(
             current_atom.value, 
             class->name,
-            0,
+            var_dec.scope == PARSER_VAR_STATIC ? static_i : field_i,
             var_dec.scope == PARSER_VAR_STATIC ? IDT_STATIC : IDT_FIELD
         );
+
+        if (var_dec.scope == PARSER_VAR_STATIC) {
+            static_i++;
+        } else {
+            field_i++;
+        }
 
         consume_atom();
         free(current_atom.value);
@@ -172,7 +184,7 @@ static void parse_class_vars_dec(Parser_class_dec *class)
     *(Parser_class_var_dec *)var_node->data = var_dec;
     ll_append(var_node, &class->vars);
 
-    parse_class_vars_dec(class);
+    parse_class_vars_dec(class, static_i, field_i);
 }
 
 static void parse_subroutines(Parser_class_dec *class)
@@ -230,7 +242,7 @@ static void parse_subroutines(Parser_class_dec *class)
     );
     free(current_atom.value);
 
-    parse_var_decs(&subroutine);
+    parse_var_decs(&subroutine, 0);
     parse_statements(&subroutine.statements);
 
     consume_atom();
@@ -250,6 +262,8 @@ static void parse_subroutines(Parser_class_dec *class)
 
 static void parse_params_list(Parser_subroutine_dec *subroutine)
 {
+    int var_i = 0;
+
     consume_atom();
     expect(
         current_atom.symbol == TK_SYMBOL_L_PAREN,
@@ -270,7 +284,8 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
         );
         param.name = current_atom.value;
 
-        idt_store(param.name, subroutine->name, 0, IDT_PARAM);
+        idt_store(param.name, subroutine->name, var_i, IDT_PARAM);
+        var_i++;
         
         LL_Node *param_node = ll_make_node(sizeof(Parser_param));
         *(Parser_param *)param_node->data = param;
@@ -291,7 +306,7 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
     free(current_atom.value);
 }
 
-static void parse_var_decs(Parser_subroutine_dec *subroutine)
+static void parse_var_decs(Parser_subroutine_dec *subroutine, int var_i)
 {
     Tokenizer_atom peek = peek_atom();
     free(peek.value);
@@ -325,7 +340,8 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine)
         name_node->data = (void *)current_atom.value;
         ll_append(name_node, &var.names);
 
-        idt_store(current_atom.value, subroutine->name, 0, IDT_LOCAL);
+        idt_store(current_atom.value, subroutine->name, var_i, IDT_LOCAL);
+        var_i++;
 
         consume_atom();
 
@@ -345,7 +361,7 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine)
     *(Parser_var_dec *)var_node->data = var;
     ll_append(var_node, &subroutine->vars);
 
-    parse_var_decs(subroutine);
+    parse_var_decs(subroutine, var_i);
 }
 
 static void parse_statements(LL_List *statements_list)
