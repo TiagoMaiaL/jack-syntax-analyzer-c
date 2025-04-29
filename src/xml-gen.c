@@ -1,6 +1,8 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <string.h>
 #include "file-handler.h"
+#include "id-table.h"
 #include "xml-gen.h"
 
 static FILE *file;
@@ -25,7 +27,8 @@ void write_term(Parser_term term, short level);
 void write_operator(Parser_term_operator op, short level);
 
 void write_keyword(char *desc, short level);
-void write_identifier(char *desc, short level);
+void write_identifier(char *id_type, char *desc, bool is_usage, IDT_Category category, int index, short level);
+void write_type(char *desc, short level);
 void write_symbol(char *desc, short level);
 void write_tag(char *tag_desc, bool is_closing, short level);
 void write_entry(char *tag_desc, char *val_desc, short level);
@@ -38,6 +41,9 @@ bool is_type_keyword(char *type);
 char *term_keyword_value(Parser_term_keyword_constant keyword);
 char *term_operator_value(Parser_term_operator op);
 
+static char *class_name = NULL;
+static char *subroutine_name = NULL;
+
 void xml_gen(FILE *file_handle, Parser_jack_syntax file_syntax)
 {
     file = file_handle;
@@ -47,10 +53,11 @@ void xml_gen(FILE *file_handle, Parser_jack_syntax file_syntax)
 void write_class(Parser_class_dec class)
 {
     short level = 1;
+    class_name = class.name;
 
     write_tag("class", false, 0); write_ln();
     write_keyword("class", level);
-    write_identifier(class.name, level);
+    write_identifier("class", class.name, false, -1, -1, level);
     write_symbol("{", level);
     
     if (class.vars.count > 0) {
@@ -83,12 +90,20 @@ void write_class_var(Parser_class_var_dec var_dec, short level)
     if (is_type_keyword(var_dec.type_name)) {
         write_keyword(var_dec.type_name, level + 1);
     } else {
-        write_identifier(var_dec.type_name, level + 1);
+        write_type(var_dec.type_name, level + 1);
     }
     
     LL_Node *name = var_dec.names.head;
     while (name != NULL) {
-        write_identifier((char *)name->data, level + 1);
+        IDT_Entry *entry = idt_entry((char *)name->data, class_name);
+        write_identifier(
+            var_dec.scope == PARSER_VAR_STATIC ? "static" : "field",
+            (char *)name->data, 
+            false,
+            entry->category,
+            entry->index,
+            level + 1
+        );
 
         if (name->next != NULL) {
             write_symbol(",", level + 1);
@@ -103,6 +118,7 @@ void write_class_var(Parser_class_var_dec var_dec, short level)
 
 void write_subroutine(Parser_subroutine_dec subroutine, short level)
 {
+    subroutine_name = subroutine.name;
     write_tag("subroutineDec", false, level); write_ln();
 
     write_keyword(subroutine_scope_keyword(subroutine.scope), level + 1);
@@ -110,10 +126,10 @@ void write_subroutine(Parser_subroutine_dec subroutine, short level)
     if (is_type_keyword(subroutine.type_name)) {
         write_keyword(subroutine.type_name, level + 1);
     } else {
-        write_identifier(subroutine.type_name, level + 1);
+        write_type(subroutine.type_name, level + 1);
     }
 
-    write_identifier(subroutine.name, level + 1);
+    write_identifier("subroutine", subroutine.name, false, -1, -1, level + 1);
 
     write_symbol("(", level + 1);
     write_parameter_list(subroutine.params, level + 1);
@@ -135,9 +151,18 @@ void write_parameter_list(LL_List params, short level)
         if (is_type_keyword(val.type_name)) {
             write_keyword(val.type_name, level + 1);
         } else {
-            write_keyword(val.type_name, level + 1);
+            write_type(val.type_name, level + 1);
         }
-        write_identifier(val.name, level + 1);
+
+        IDT_Entry *entry = idt_entry(val.name, subroutine_name);
+        write_identifier(
+            "argument",
+            val.name, 
+            false,
+            entry->category,
+            entry->index,
+            level + 1
+        );
         
         if (param->next != NULL) {
             write_symbol(",", level + 1);
@@ -177,12 +202,20 @@ void write_vars(LL_List vars, short level)
         if (is_type_keyword(val.type_name)) {
             write_keyword(val.type_name, level + 1);
         } else {
-            write_identifier(val.type_name, level + 1);
+            write_type(val.type_name, level + 1);
         }
 
         LL_Node *name = val.names.head;
         while (name != NULL) {
-            write_identifier((char *)name->data, level + 1);
+            IDT_Entry *entry = idt_entry((char *)name->data, subroutine_name);
+            write_identifier(
+                "var",
+                (char *)name->data, 
+                false,
+                entry->category,
+                entry->index,
+                level + 1
+            );
 
             if (name->next != NULL) {
                 write_symbol(",", level + 1);
@@ -249,7 +282,17 @@ void write_let(Parser_let_statement let_stmt, short level)
 {
     write_tag("letStatement", false, level); write_ln();
     write_keyword("let", level + 1);
-    write_identifier(let_stmt.var_name, level + 1);
+
+    IDT_Entry *entry = idt_entry(let_stmt.var_name, subroutine_name);
+    write_identifier(
+        "var",
+        let_stmt.var_name, 
+        true,
+        entry->category,
+        entry->index,
+        level + 1
+    );
+
     if (let_stmt.has_subscript) {
         write_symbol("[", level + 1);
         write_expression(let_stmt.subscript, level + 1);
@@ -361,7 +404,16 @@ void write_term(Parser_term term, short level)
     }
 
     if (term.var_usage != NULL) {
-        write_identifier(term.var_usage->var_name, level + 1);
+        IDT_Entry *entry = idt_entry(term.var_usage->var_name, subroutine_name);
+        write_identifier(
+            "var",
+            term.var_usage->var_name,
+            true,
+            entry == NULL ? -1 : entry->category,
+            entry == NULL ? -1 : entry->index,
+            level + 1
+        );
+
         if (term.var_usage->subscript != NULL) {
             write_symbol("[", level + 1);
             write_expression(*term.var_usage->subscript, level + 1);
@@ -398,7 +450,15 @@ void write_subroutine_call(Parser_term_subroutine_call call, short level)
         write_entry("identifier", call.instance_var_name, level);
         write_symbol(".", level);
     }
-    write_identifier(call.subroutine_name, level);
+
+    write_identifier(
+        "subroutine",
+        call.subroutine_name,
+        true,
+        -1,
+        -1,
+        level + 1
+    );
     write_symbol("(", level);
 
     write_tag("expressionList", false, level); write_ln();
@@ -422,7 +482,41 @@ void write_keyword(char *desc, short level)
     write_entry("keyword", desc, level);
 }
 
-void write_identifier(char *desc, short level)
+void write_identifier(char *id_type, char *desc, bool is_usage, IDT_Category category, int index, short level)
+{
+    char buff[200];
+    char *category_desc = NULL;
+    
+    if (category == IDT_STATIC) {
+        category_desc = "static";
+
+    } else if (category == IDT_FIELD) {
+        category_desc = "field";
+
+    } else if (category == IDT_LOCAL) {
+        category_desc = "local";
+
+    } else if (category == IDT_PARAM) {
+        category_desc = "argument";
+
+    } else {
+        category_desc = "";
+    }
+
+    sprintf(
+        buff, 
+        "type = %s, id = %s, is being used: %d, category = %s, index = %d",
+        id_type,
+        desc,
+        is_usage,
+        category_desc,
+        index
+    );
+
+    write_entry("identifier", buff, level);
+}
+
+void write_type(char *desc, short level)
 {
     write_entry("identifier", desc, level);
 }

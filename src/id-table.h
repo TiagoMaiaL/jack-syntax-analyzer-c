@@ -16,8 +16,6 @@ typedef struct {
 } IDT_Entry;
 
 void idt_store(const char *id, const char *scope_id, int index, IDT_Category category);
-
 IDT_Entry *idt_entry(const char *id, const char *scope_id);
-
 
 #endif
