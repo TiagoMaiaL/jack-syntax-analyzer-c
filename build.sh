@@ -16,6 +16,7 @@ source_files=(
     '../src/parser.c'
     '../src/linked-list.c'
     '../src/xml-gen.c'
+    '../src/code-gen.c'
     '../src/hash-table.c'
     '../src/id-table.c'
 )

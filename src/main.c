@@ -3,14 +3,14 @@
 #include <string.h>
 #include "file-handler.h"
 #include "parser.h"
-#include "xml-gen.h"
+#include "code-gen.h"
 
 #define SUCCESS_CODE    0
 #define ERROR_CODE      -1
 #define ARGS_NUM        2
 
-static FILE *jack_file_handle   = NULL;
-static FILE *xml_file_handle    = NULL;
+static FILE *jack_file_handle       = NULL;
+static FILE *code_file_handle       = NULL;
 
 static int open_jack_file(const char *path);
 static int create_output_file(char *path);
@@ -42,11 +42,11 @@ int main(int argc, char **argv)
         }
             
         Parser_jack_syntax file_syntax = parser_parse(jack_file_handle);
-        xml_gen(xml_file_handle, file_syntax);
+        cg_gen_code(code_file_handle, &file_syntax);
         parser_free(file_syntax);
 
         fh_close_file(jack_file_handle);
-        fh_close_file(xml_file_handle);
+        fh_close_file(code_file_handle);
     }
 
     fh_close_proj(&proj);
@@ -79,10 +79,9 @@ static int create_output_file(char *path)
     while ((ch = *i_path) != '\0') {
         if (strcmp(i_path, ext) == 0) {
             i_path[0] = '.';
-            i_path[1] = 'x';
+            i_path[1] = 'v';
             i_path[2] = 'm';
-            i_path[3] = 'l';
-            i_path[4] = '\0';
+            i_path[3] = '\0';
             did_rename = true;
             break;
         }
@@ -90,13 +89,13 @@ static int create_output_file(char *path)
     }
 
     if (!did_rename) {
-        printf("Unable to create xml path for %s\n", path);
+        printf("Unable to create code path for %s\n", path);
         return ERROR_CODE;
     }
 
-    xml_file_handle = fh_open_file(path, true);
+    code_file_handle = fh_open_file(path, true);
 
-    if (xml_file_handle == NULL) {
+    if (code_file_handle == NULL) {
         printf(
             "File %s couldn't be created.\n", 
             path
