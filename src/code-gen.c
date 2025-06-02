@@ -14,6 +14,7 @@ static void gen_do_code(Parser_do_statement do_statement);
 
 static void gen_expression_code(Parser_expression *expr);
 static void gen_term_code(Parser_term *term);
+static void gen_operator_code(Parser_term_operator operator);
 
 static void write(const char *str);
 
@@ -76,7 +77,7 @@ static void gen_statement_code(Parser_statement statement)
         // Exec cond expr + jmp vm commands
 
     } else if (statement.return_statement != NULL) {
-        // return vm command
+        write("return");
     }
 }
 
@@ -107,8 +108,6 @@ static void gen_expression_code(Parser_expression *expr)
     LL_Node *term_node = expr->terms.head;
     LL_Node *op_node = NULL;
 
-    // 1 + 1 + 1
-
     while (term_node != NULL) {
         // push term
         gen_term_code((Parser_term *)term_node->data);
@@ -118,12 +117,11 @@ static void gen_expression_code(Parser_expression *expr)
         if (op_node == NULL) {
             op_node = expr->operators.head;
             continue;
-        } else {
-            op_node = op_node->next;
         }
 
         // apply vm function
         gen_operator_code(*(Parser_term_operator *)op_node->data);
+        op_node = op_node->next;
     }
 }
 
@@ -154,8 +152,42 @@ static void gen_term_code(Parser_term *term)
         gen_expression_code(term->parenthesized_expression);
 
     } else if (term->sub_term != NULL) {
-        gen_term_code(term->sub_term.term);
-        gen_operator_code(term->unary_op);
+        gen_term_code(&term->sub_term->term);
+        gen_operator_code(term->sub_term->unary_op);
+    }
+}
+
+static void gen_operator_code(Parser_term_operator operator)
+{
+    if (operator == PARSER_TERM_OP_ADDITION) {
+        write("add");
+
+    } else if (operator == PARSER_TERM_OP_SUBTRACTION) {
+        write("sub");
+
+    } else if (operator == PARSER_TERM_OP_MULTIPLICATION) {
+        write("call Math.multiply 2");
+
+    } else if (operator == PARSER_TERM_OP_DIVISION) {
+        write("call Math.divide 2");
+
+    } else if (operator == PARSER_TERM_OP_GREATER) {
+        write("gt");
+
+    } else if (operator == PARSER_TERM_OP_LESSER) {
+        write("lt");
+
+    } else if (operator == PARSER_TERM_OP_ASSIGN) {
+        write("eq");
+
+    } else if (operator == PARSER_TERM_OP_AND) {
+        write("and");
+
+    } else if (operator == PARSER_TERM_OP_OR) {
+        write("or");
+
+    } else if (operator == PARSER_TERM_OP_NOT) {
+        write("not");
     }
 }
 
