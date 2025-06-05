@@ -54,6 +54,24 @@ IDT_Entry *idt_entry(
     return (IDT_Entry *)data;
 }
 
+char *idt_category_name(IDT_Category category)
+{
+    if (category == IDT_STATIC) {
+        return "static";
+
+    } else if (category == IDT_LOCAL) {
+        return "local";
+
+    } else if (category == IDT_FIELD) {
+        // TODO: handle field values.
+
+    } else if (category == IDT_PARAM) {
+        return "argument";
+    }
+
+    return NULL;
+}
+
 static char *unique_id_key(
     const char *id, 
     const char *scope_id
@@ -68,3 +86,4 @@ static char *unique_id_key(
 
     return buffer;
 }
+

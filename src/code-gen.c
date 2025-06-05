@@ -1,20 +1,25 @@
 #include "code-gen.h"
 #include "file-handler.h"
+#include "id-table.h"
 #include "linked-list.h"
 
 #define STR_BUFF_SIZE 10000
 
 static FILE *code_file;
 static char *class_name;
+static char *subroutine_name;
 
 static void gen_subroutine_code(Parser_subroutine_dec subroutine);
 
 static void gen_statement_code(Parser_statement statement);
 static void gen_do_code(Parser_do_statement do_statement);
+static void gen_let_code(Parser_let_statement let_statement);
 
 static void gen_expression_code(Parser_expression *expr);
 static void gen_term_code(Parser_term *term);
+static void gen_subroutine_call_code(Parser_term_subroutine_call call);
 static void gen_operator_code(Parser_term_operator operator);
+static void gen_unary_operator_code(Parser_term_operator operator);
 
 static void write(const char *str);
 
@@ -49,6 +54,8 @@ static void gen_subroutine_code(Parser_subroutine_dec subroutine)
     );
     write(vm_func);
 
+    subroutine_name = subroutine.name;
+
     LL_Node *node = subroutine.statements.head;
     while (node != NULL) {
         gen_statement_code(*(Parser_statement *)node->data);
@@ -62,12 +69,7 @@ static void gen_statement_code(Parser_statement statement)
         gen_do_code(*statement.do_statement);
 
     } else if (statement.let_statement != NULL) {
-        // Exec expr + pop for specific index/segment
-        // If there's subscript
-            // Generate code for computing index
-            // Select the that segment
-        // generate code to eval expr
-        // pop value to the right segment
+        gen_let_code(*statement.let_statement);
 
     } else if (statement.if_statement != NULL) {
         // Exec cond expr + if-goto vm command
@@ -101,6 +103,26 @@ static void gen_do_code(Parser_do_statement do_statement)
     );
 
     write(call_command);
+}
+
+static void gen_let_code(Parser_let_statement let_statement)
+{
+    gen_expression_code(&let_statement.value);
+
+    IDT_Entry *entry = idt_entry(
+        let_statement.var_name, 
+        subroutine_name
+    );
+    if (entry != NULL) {
+        char pop_command[STR_BUFF_SIZE];
+        sprintf(
+            pop_command,
+            "pop %s %d",
+            idt_category_name(entry->category),
+            entry->index
+        );
+        write(pop_command);
+    }
 }
 
 static void gen_expression_code(Parser_expression *expr)
@@ -146,15 +168,37 @@ static void gen_term_code(Parser_term *term)
         // TODO:
 
     } else if (term->subroutine_call != NULL) {
-        // TODO:
+        gen_subroutine_call_code(*term->subroutine_call);
 
     } else if (term->parenthesized_expression != NULL) {
         gen_expression_code(term->parenthesized_expression);
 
     } else if (term->sub_term != NULL) {
         gen_term_code(&term->sub_term->term);
-        gen_operator_code(term->sub_term->unary_op);
+        gen_unary_operator_code(term->sub_term->unary_op);
     }
+}
+
+#include <stdio.h>
+static void gen_subroutine_call_code(Parser_term_subroutine_call call)
+{
+    printf("gen subroutine call code %s", call.subroutine_name);
+    LL_Node *expression_node = call.param_expressions.head;
+    while (expression_node != NULL) {
+        gen_expression_code((Parser_expression *)expression_node->data);
+        expression_node = expression_node->next;
+    }
+
+    char call_command[STR_BUFF_SIZE];
+    sprintf(
+        call_command,
+        "call %s.%s %d",
+        call.instance_var_name, // TODO: get class name from instance.
+        call.subroutine_name,
+        call.param_expressions.count
+    );
+
+    write(call_command);
 }
 
 static void gen_operator_code(Parser_term_operator operator)
@@ -185,6 +229,13 @@ static void gen_operator_code(Parser_term_operator operator)
 
     } else if (operator == PARSER_TERM_OP_OR) {
         write("or");
+    }
+}
+
+static void gen_unary_operator_code(Parser_term_operator operator)
+{
+    if (operator == PARSER_TERM_OP_SUBTRACTION) {
+        write("neg");
 
     } else if (operator == PARSER_TERM_OP_NOT) {
         write("not");
