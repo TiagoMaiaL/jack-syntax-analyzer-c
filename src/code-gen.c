@@ -54,18 +54,31 @@ static void gen_subroutine_code(Parser_subroutine_dec subroutine)
     indent_level = 0;
     char vm_func[STR_BUFF_SIZE];
 
+    short vars_count = 0;
+    LL_Node *node = subroutine.vars.head;
+    while (node != NULL) {
+        Parser_var_dec *var = (Parser_var_dec *)node->data;
+        if (var != NULL && var->names.count > 1) {
+            vars_count += var->names.count;
+        } else {
+            vars_count++;
+        }
+
+        node = node->next;
+    }
+
     sprintf(
         vm_func, 
         "function %s.%s %d", 
         class_name,
         subroutine.name, 
-        subroutine.vars.count
+        vars_count
     );
     write(vm_func);
 
     subroutine_name = subroutine.name;
 
-    LL_Node *node = subroutine.statements.head;
+    node = subroutine.statements.head;
     while (node != NULL) {
         indent_level = 1;
         gen_statement_code(*(Parser_statement *)node->data);
