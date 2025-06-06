@@ -8,6 +8,7 @@
 static FILE *code_file;
 static char *class_name;
 static char *subroutine_name;
+static int label_count;
 static short indent_level;
 
 static void gen_subroutine_code(Parser_subroutine_dec subroutine);
@@ -15,6 +16,7 @@ static void gen_subroutine_code(Parser_subroutine_dec subroutine);
 static void gen_statement_code(Parser_statement statement);
 static void gen_do_code(Parser_do_statement do_statement);
 static void gen_let_code(Parser_let_statement let_statement);
+static void gen_if_code(Parser_if_statement if_statement);
 
 static void gen_expression_code(Parser_expression *expr);
 static void gen_term_code(Parser_term *term);
@@ -23,12 +25,15 @@ static void gen_subroutine_call_code(Parser_term_subroutine_call call);
 static void gen_operator_code(Parser_term_operator operator);
 static void gen_unary_operator_code(Parser_term_operator operator);
 
+static void unique_label(char *buff);
+
 static void write(const char *str);
 
 void cg_gen_code(FILE *file, Parser_jack_syntax *ast)
 {
     code_file = file;
     class_name = ast->class_dec.name;
+    label_count = 0;
     indent_level = 0;
     
     Parser_class_dec class = ast->class_dec;
@@ -77,13 +82,15 @@ static void gen_statement_code(Parser_statement statement)
         gen_let_code(*statement.let_statement);
 
     } else if (statement.if_statement != NULL) {
-        // Exec cond expr + if-goto vm command
-        // Generate code 
+        gen_if_code(*statement.if_statement);
 
     } else if (statement.while_statement != NULL) {
         // Exec cond expr + jmp vm commands
 
     } else if (statement.return_statement != NULL) {
+        if (statement.return_statement->has_expr) {
+            gen_expression_code(&statement.return_statement->expression);
+        }
         write("return");
     }
 }
@@ -128,6 +135,47 @@ static void gen_let_code(Parser_let_statement let_statement)
         );
         write(pop_command);
     }
+}
+
+static void gen_if_code(Parser_if_statement if_statement)
+{
+    char else_label_buff[STR_BUFF_SIZE];
+    char end_label_buff[STR_BUFF_SIZE];
+    unique_label(else_label_buff);
+    unique_label(end_label_buff);
+
+    // VM code for computing expression
+    gen_expression_code(&if_statement.conditional);
+    gen_unary_operator_code(PARSER_TERM_OP_SUBTRACTION);
+
+    // if-goto else_statement (~cond) 
+    char command_buff[STR_BUFF_SIZE];
+    sprintf(command_buff, "if-goto %s", else_label_buff);
+    write(command_buff);
+
+    // inside if-branch
+    LL_Node *statement_node = if_statement.conditional_statements.head;
+    while (statement_node != NULL) {
+        gen_statement_code(*(Parser_statement *)statement_node->data);
+        statement_node = statement_node->next;
+    }
+    
+    sprintf(command_buff, "goto %s", end_label_buff);
+    write(command_buff);
+
+    // inside else-branch
+    sprintf(command_buff, "label %s", else_label_buff);
+    write(command_buff);
+
+    statement_node = if_statement.else_statements.head;
+    while (statement_node != NULL) {
+        gen_statement_code(*(Parser_statement *)statement_node->data);
+        statement_node = statement_node->next;
+    }
+
+    // end if-else marker label
+    sprintf(command_buff, "label %s", end_label_buff);
+    write(command_buff);
 }
 
 static void gen_expression_code(Parser_expression *expr)
@@ -261,6 +309,17 @@ static void gen_unary_operator_code(Parser_term_operator operator)
     } else if (operator == PARSER_TERM_OP_NOT) {
         write("not");
     }
+}
+
+static void unique_label(char *buff)
+{
+    sprintf(
+        buff,
+        "%s_%d",
+        class_name,
+        label_count
+    );
+    label_count++;
 }
 
 static void write(const char *str)

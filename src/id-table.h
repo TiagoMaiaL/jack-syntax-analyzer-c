@@ -11,6 +11,7 @@ typedef enum {
 typedef struct {
     char *key;
     char *id;
+    // TODO: Add a class name property
     int index;
     IDT_Category category;
 } IDT_Entry;
