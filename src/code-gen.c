@@ -8,6 +8,7 @@
 static FILE *code_file;
 static char *class_name;
 static char *subroutine_name;
+static short indent_level;
 
 static void gen_subroutine_code(Parser_subroutine_dec subroutine);
 
@@ -17,6 +18,7 @@ static void gen_let_code(Parser_let_statement let_statement);
 
 static void gen_expression_code(Parser_expression *expr);
 static void gen_term_code(Parser_term *term);
+static void gen_var_usage_code(Parser_term_var_usage *var_usage);
 static void gen_subroutine_call_code(Parser_term_subroutine_call call);
 static void gen_operator_code(Parser_term_operator operator);
 static void gen_unary_operator_code(Parser_term_operator operator);
@@ -27,6 +29,7 @@ void cg_gen_code(FILE *file, Parser_jack_syntax *ast)
 {
     code_file = file;
     class_name = ast->class_dec.name;
+    indent_level = 0;
     
     Parser_class_dec class = ast->class_dec;
 
@@ -43,6 +46,7 @@ void cg_gen_code(FILE *file, Parser_jack_syntax *ast)
 
 static void gen_subroutine_code(Parser_subroutine_dec subroutine)
 {
+    indent_level = 0;
     char vm_func[STR_BUFF_SIZE];
 
     sprintf(
@@ -58,6 +62,7 @@ static void gen_subroutine_code(Parser_subroutine_dec subroutine)
 
     LL_Node *node = subroutine.statements.head;
     while (node != NULL) {
+        indent_level = 1;
         gen_statement_code(*(Parser_statement *)node->data);
         node = node->next;
     }
@@ -159,13 +164,13 @@ static void gen_term_code(Parser_term *term)
         write(const_push);
 
     } else if (term->string != NULL) {
-        // TODO:
+        // TODO: determine how to handle strings.
 
     } else if (term->keyword_value != PARSER_TERM_KEYWORD_UNDEFINED) {
         // TODO:
 
     } else if (term->var_usage != NULL) {
-        // TODO:
+        gen_var_usage_code(term->var_usage);
 
     } else if (term->subroutine_call != NULL) {
         gen_subroutine_call_code(*term->subroutine_call);
@@ -179,10 +184,26 @@ static void gen_term_code(Parser_term *term)
     }
 }
 
-#include <stdio.h>
+static void gen_var_usage_code(Parser_term_var_usage *var_usage)
+{
+    IDT_Entry *entry = idt_entry(
+        var_usage->var_name, 
+        subroutine_name
+    );
+    if (entry != NULL) {
+        char push_command[STR_BUFF_SIZE];
+        sprintf(
+            push_command,
+            "push %s %d",
+            idt_category_name(entry->category),
+            entry->index
+        );
+        write(push_command);
+    }
+}
+
 static void gen_subroutine_call_code(Parser_term_subroutine_call call)
 {
-    printf("gen subroutine call code %s", call.subroutine_name);
     LL_Node *expression_node = call.param_expressions.head;
     while (expression_node != NULL) {
         gen_expression_code((Parser_expression *)expression_node->data);
@@ -244,6 +265,12 @@ static void gen_unary_operator_code(Parser_term_operator operator)
 
 static void write(const char *str)
 {
+    if (indent_level > 0) {
+        for (short i = 0; i < indent_level; i++) {
+            fh_write("  ", code_file);
+        }
+    }
+
     fh_write(str, code_file);
     fh_write("\n", code_file);
 }
