@@ -17,9 +17,12 @@ static void gen_statement_code(Parser_statement statement);
 static void gen_do_code(Parser_do_statement do_statement);
 static void gen_let_code(Parser_let_statement let_statement);
 static void gen_if_code(Parser_if_statement if_statement);
+static void gen_while_code(Parser_while_statement while_statement);
+static void gen_return_code(Parser_return_statement return_statement);
 
 static void gen_expression_code(Parser_expression *expr);
 static void gen_term_code(Parser_term *term);
+static void gen_keyword_code(Parser_term_keyword_constant keyword);
 static void gen_var_usage_code(Parser_term_var_usage *var_usage);
 static void gen_subroutine_call_code(Parser_term_subroutine_call call);
 static void gen_operator_code(Parser_term_operator operator);
@@ -98,13 +101,10 @@ static void gen_statement_code(Parser_statement statement)
         gen_if_code(*statement.if_statement);
 
     } else if (statement.while_statement != NULL) {
-        // Exec cond expr + jmp vm commands
+        gen_while_code(*statement.while_statement);
 
     } else if (statement.return_statement != NULL) {
-        if (statement.return_statement->has_expr) {
-            gen_expression_code(&statement.return_statement->expression);
-        }
-        write("return");
+        gen_return_code(*statement.return_statement);
     }
 }
 
@@ -159,7 +159,7 @@ static void gen_if_code(Parser_if_statement if_statement)
 
     // VM code for computing expression
     gen_expression_code(&if_statement.conditional);
-    gen_unary_operator_code(PARSER_TERM_OP_SUBTRACTION);
+    gen_unary_operator_code(PARSER_TERM_OP_NOT);
 
     // if-goto else_statement (~cond) 
     char command_buff[STR_BUFF_SIZE];
@@ -189,6 +189,67 @@ static void gen_if_code(Parser_if_statement if_statement)
     // end if-else marker label
     sprintf(command_buff, "label %s", end_label_buff);
     write(command_buff);
+}
+
+static void gen_while_code(Parser_while_statement while_statement)
+{
+    char start_buff[STR_BUFF_SIZE];
+    char end_buff[STR_BUFF_SIZE];
+    unique_label(start_buff);
+    unique_label(end_buff);
+
+    char vm_command_buff[STR_BUFF_SIZE];
+
+    // Mark beginning of while
+    sprintf(
+        vm_command_buff,
+        "label %s",
+        start_buff
+    );
+    write(vm_command_buff);
+
+    // Gen expression for while ~cond
+    gen_expression_code(&while_statement.conditional);
+    gen_unary_operator_code(PARSER_TERM_OP_NOT);
+
+    // Goto end if ~cond
+    sprintf(
+        vm_command_buff,
+        "if-goto %s",
+        end_buff
+    );
+    write(vm_command_buff);
+
+    // Statements inside while
+    LL_Node *statement_node = while_statement.statements.head;
+    while (statement_node != NULL) {
+        gen_statement_code(*(Parser_statement *)statement_node->data);
+        statement_node = statement_node->next;
+    }
+
+    // Begin next iteration
+    sprintf(
+        vm_command_buff,
+        "goto %s",
+        start_buff
+    );
+    write(vm_command_buff);
+
+    // Mark end of while
+    sprintf(
+        vm_command_buff,
+        "label %s",
+        end_buff
+    );
+    write(vm_command_buff);
+}
+
+static void gen_return_code(Parser_return_statement return_statement)
+{
+    if (return_statement.has_expr) {
+        gen_expression_code(&return_statement.expression);
+    }
+    write("return");
 }
 
 static void gen_expression_code(Parser_expression *expr)
@@ -228,7 +289,7 @@ static void gen_term_code(Parser_term *term)
         // TODO: determine how to handle strings.
 
     } else if (term->keyword_value != PARSER_TERM_KEYWORD_UNDEFINED) {
-        // TODO:
+        gen_keyword_code(term->keyword_value);
 
     } else if (term->var_usage != NULL) {
         gen_var_usage_code(term->var_usage);
@@ -242,6 +303,22 @@ static void gen_term_code(Parser_term *term)
     } else if (term->sub_term != NULL) {
         gen_term_code(&term->sub_term->term);
         gen_unary_operator_code(term->sub_term->unary_op);
+    }
+}
+
+static void gen_keyword_code(Parser_term_keyword_constant keyword)
+{
+    if (keyword == PARSER_TERM_KEYWORD_TRUE) {
+        write("push constant 1");
+        write("neg");
+
+    } else if (keyword == PARSER_TERM_KEYWORD_FALSE) {
+        write("push constant 0");
+
+    } else if (keyword == PARSER_TERM_KEYWORD_THIS) {
+
+    } else if (keyword == PARSER_TERM_KEYWORD_NULL) {
+        write("push constant 0");
     }
 }
 
