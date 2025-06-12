@@ -16,6 +16,7 @@ typedef struct {
     IDT_Category category;
 } IDT_Entry;
 
+// TODO: when storing local vars or args, combine class+func_name as scope
 void idt_store(const char *id, const char *scope_id, int index, IDT_Category category);
 IDT_Entry *idt_entry(const char *id, const char *scope_id);
 char *idt_category_name(IDT_Category category);

@@ -11,7 +11,7 @@ static char *subroutine_name;
 static int label_count;
 static short indent_level;
 
-static void gen_subroutine_code(Parser_subroutine_dec subroutine);
+static void gen_subroutine_code(Parser_subroutine_dec subroutine, Parser_class_dec class);
 
 static void gen_statement_code(Parser_statement statement);
 static void gen_do_code(Parser_do_statement do_statement);
@@ -47,12 +47,12 @@ void cg_gen_code(FILE *file, Parser_jack_syntax *ast)
 
     LL_Node *node = class.subroutines.head;
     while (node != NULL) {
-        gen_subroutine_code(*(Parser_subroutine_dec *)node->data);
+        gen_subroutine_code(*(Parser_subroutine_dec *)node->data, class);
         node = node->next;
     }
 }
 
-static void gen_subroutine_code(Parser_subroutine_dec subroutine)
+static void gen_subroutine_code(Parser_subroutine_dec subroutine, Parser_class_dec class)
 {
     indent_level = 0;
     char vm_func[STR_BUFF_SIZE];
@@ -80,10 +80,39 @@ static void gen_subroutine_code(Parser_subroutine_dec subroutine)
     write(vm_func);
 
     subroutine_name = subroutine.name;
+    indent_level = 1;
+
+    if (subroutine.scope == PARSER_FUNC_CONSTRUCTOR) {
+        short fields_count = 0;
+        node = class.vars.head;
+
+        while (node != NULL) {
+            Parser_class_var_dec *class_var = (Parser_class_var_dec *)node->data;
+
+            if (class_var != NULL && class_var->scope == PARSER_VAR_FIELD) {
+                if (class_var->names.count > 1) {
+                    fields_count += class_var->names.count;
+                } else {
+                    fields_count++;
+                }
+            }
+
+            node = node->next;
+        }
+
+        char command_buff[STR_BUFF_SIZE];
+        sprintf(
+            command_buff,
+            "push constant %d",
+            fields_count
+        );
+        write(command_buff);
+        write("call Memory.alloc 1");
+        write("pop pointer 0");
+    }
 
     node = subroutine.statements.head;
     while (node != NULL) {
-        indent_level = 1;
         gen_statement_code(*(Parser_statement *)node->data);
         node = node->next;
     }
