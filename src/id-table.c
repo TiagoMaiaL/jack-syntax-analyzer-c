@@ -6,11 +6,6 @@
 
 static HT_Table *table = NULL;
 
-static char *unique_id_key(
-    const char *id, 
-    const char *scope_id
-);
-
 void idt_init()
 {
     if (table == NULL) {
@@ -20,70 +15,27 @@ void idt_init()
 }
 
 void idt_store(
-    const char *id, 
-    const char *scope_id, 
+    const char *key, 
     int index, 
     IDT_Category category
 ) {
     idt_init();
 
-    char *key = unique_id_key(id, scope_id);
-
     IDT_Entry *entry = malloc(sizeof(IDT_Entry));
     entry->category = category;
-    entry->id = (char *)id;
     entry->key = (char *)key;
     entry->index = index;
 
     ht_store(key, (void *)entry, table);
 }
 
-IDT_Entry *idt_entry(
-    const char *id, 
-    const char *scope_id
-) {
-    void *data = ht_value(
-        unique_id_key(id, scope_id), 
-        table
-    );
+IDT_Entry *idt_entry(const char *key) {
+    void *data = ht_value(key, table);
 
     if (data == NULL) {
         return NULL;
     }
 
     return (IDT_Entry *)data;
-}
-
-char *idt_category_name(IDT_Category category)
-{
-    if (category == IDT_STATIC) {
-        return "static";
-
-    } else if (category == IDT_LOCAL) {
-        return "local";
-
-    } else if (category == IDT_FIELD) {
-        // TODO: handle field values.
-
-    } else if (category == IDT_PARAM) {
-        return "argument";
-    }
-
-    return NULL;
-}
-
-static char *unique_id_key(
-    const char *id, 
-    const char *scope_id
-) {
-    int len = 0;
-    len += strlen(id);
-    len += strlen(scope_id);
-    len += 2; // separator + \0
-
-    char *buffer = malloc(sizeof(char) * len);
-    sprintf(buffer, "%s$%s", id, scope_id);
-
-    return buffer;
 }
 

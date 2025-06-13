@@ -8,6 +8,7 @@
 static FILE *code_file;
 static char *class_name;
 static char *subroutine_name;
+static Parser_subroutine_dec subroutine_dec;
 static int label_count;
 static short indent_level;
 
@@ -28,6 +29,8 @@ static void gen_subroutine_call_code(Parser_term_subroutine_call call);
 static void gen_operator_code(Parser_term_operator operator);
 static void gen_unary_operator_code(Parser_term_operator operator);
 
+static char *idt_category_name(IDT_Category category);
+static IDT_Entry *search_var(char *class, char *subroutine, char *name);
 static void unique_label(char *buff);
 
 static void write(const char *str);
@@ -80,6 +83,7 @@ static void gen_subroutine_code(Parser_subroutine_dec subroutine, Parser_class_d
     write(vm_func);
 
     subroutine_name = subroutine.name;
+    subroutine_dec = subroutine;
     indent_level = 1;
 
     if (subroutine.scope == PARSER_FUNC_CONSTRUCTOR) {
@@ -163,9 +167,10 @@ static void gen_let_code(Parser_let_statement let_statement)
 {
     gen_expression_code(&let_statement.value);
 
-    IDT_Entry *entry = idt_entry(
-        let_statement.var_name, 
-        subroutine_name
+    IDT_Entry *entry = search_var(
+        class_name, 
+        subroutine_name, 
+        let_statement.var_name
     );
     if (entry != NULL) {
         char pop_command[STR_BUFF_SIZE];
@@ -278,6 +283,9 @@ static void gen_return_code(Parser_return_statement return_statement)
     if (return_statement.has_expr) {
         gen_expression_code(&return_statement.expression);
     }
+    if (subroutine_dec.scope == PARSER_FUNC_CONSTRUCTOR) {
+        write("push pointer 0");
+    }
     write("return");
 }
 
@@ -345,6 +353,7 @@ static void gen_keyword_code(Parser_term_keyword_constant keyword)
         write("push constant 0");
 
     } else if (keyword == PARSER_TERM_KEYWORD_THIS) {
+        // TODO: 
 
     } else if (keyword == PARSER_TERM_KEYWORD_NULL) {
         write("push constant 0");
@@ -353,9 +362,10 @@ static void gen_keyword_code(Parser_term_keyword_constant keyword)
 
 static void gen_var_usage_code(Parser_term_var_usage *var_usage)
 {
-    IDT_Entry *entry = idt_entry(
-        var_usage->var_name, 
-        subroutine_name
+    IDT_Entry *entry = search_var(
+        class_name,
+        subroutine_name,
+        var_usage->var_name
     );
     if (entry != NULL) {
         char push_command[STR_BUFF_SIZE];
@@ -428,6 +438,55 @@ static void gen_unary_operator_code(Parser_term_operator operator)
     } else if (operator == PARSER_TERM_OP_NOT) {
         write("not");
     }
+}
+
+static IDT_Entry *search_var(char *class, char *subroutine, char *name)
+{
+    IDT_Entry *entry;
+
+    entry = idt_entry(
+        parser_unique_var_key(
+            class, 
+            subroutine, 
+            name
+        )
+    );
+
+    if (entry != NULL) {
+        return entry;
+    }
+
+    entry = idt_entry(
+        parser_unique_var_key(
+            class, 
+            NULL, 
+            name
+        )
+    );
+
+    if (entry != NULL) {
+        return entry;
+    }
+
+    return NULL;
+}
+
+char *idt_category_name(IDT_Category category)
+{
+    if (category == IDT_STATIC) {
+        return "static";
+
+    } else if (category == IDT_LOCAL) {
+        return "local";
+
+    } else if (category == IDT_FIELD) {
+        return "this";
+
+    } else if (category == IDT_PARAM) {
+        return "argument";
+    }
+
+    return NULL;
 }
 
 static void unique_label(char *buff)

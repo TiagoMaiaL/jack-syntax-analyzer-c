@@ -6,6 +6,7 @@
 #include "id-table.h"
 
 static Tokenizer_atom current_atom;
+static char *class_name;
 
 static Parser_class_dec parse_class_dec();
 
@@ -59,6 +60,38 @@ Parser_jack_syntax parser_parse(FILE *source) {
     return jack_syntax;
 }
 
+char *parser_unique_var_key(
+    const char *class_name, 
+    const char *func_name,
+    const char *var_name
+) {
+    short len = 0;
+    char *_class_name;
+    char *_func_name;
+
+    if (class_name != NULL) {
+        len += strlen(class_name);
+        _class_name = (char *)class_name;
+    } else {
+        _class_name = "";
+    }
+
+    if (func_name != NULL) {
+        len += strlen(func_name);
+        _func_name = (char *)func_name;
+    } else {
+        _func_name = "";
+    }
+
+    len += strlen(var_name);
+    len += 3; // separators and \0
+
+    char *buffer = malloc(sizeof(char) * len);
+    sprintf(buffer, "%s$%s$%s", _class_name, _func_name, var_name);
+
+    return buffer;
+}
+
 static Parser_class_dec parse_class_dec()
 {
     consume_atom();
@@ -72,6 +105,7 @@ static Parser_class_dec parse_class_dec()
     consume_atom(); 
     expect(current_atom.type == TK_TYPE_IDENTIFIER, "Class name expected"); 
     class_dec.name = current_atom.value;
+    class_name = class_dec.name;
 
     consume_atom();
     expect(current_atom.symbol == TK_SYMBOL_L_CURLY, "'{' symbol expected");
@@ -133,8 +167,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, int static_i, int fiel
     ll_append(name_node, &var_dec.names);
 
     idt_store(
-        current_atom.value, 
-        class->name,
+        parser_unique_var_key(class->name, NULL, current_atom.value),
         var_dec.scope == PARSER_VAR_STATIC ? static_i : field_i,
         var_dec.scope == PARSER_VAR_STATIC ? IDT_STATIC : IDT_FIELD
     );
@@ -145,6 +178,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, int static_i, int fiel
         field_i++;
     }
     
+    // TODO: simplify while by merging the idt_store call outside of it.
     consume_atom(); 
     while (current_atom.symbol == TK_SYMBOL_COMMA) {
         consume_atom();
@@ -159,8 +193,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, int static_i, int fiel
         ll_append(name_node, &var_dec.names);
 
         idt_store(
-            current_atom.value, 
-            class->name,
+            parser_unique_var_key(class->name, NULL, current_atom.value),
             var_dec.scope == PARSER_VAR_STATIC ? static_i : field_i,
             var_dec.scope == PARSER_VAR_STATIC ? IDT_STATIC : IDT_FIELD
         );
@@ -284,7 +317,11 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
         );
         param.name = current_atom.value;
 
-        idt_store(param.name, subroutine->name, var_i, IDT_PARAM);
+        idt_store(
+            parser_unique_var_key(class_name, subroutine->name, param.name), 
+            var_i, 
+            IDT_PARAM
+        );
         var_i++;
         
         LL_Node *param_node = ll_make_node(sizeof(Parser_param));
@@ -340,7 +377,11 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine, int var_i)
         name_node->data = (void *)current_atom.value;
         ll_append(name_node, &var.names);
 
-        idt_store(current_atom.value, subroutine->name, var_i, IDT_LOCAL);
+        idt_store(
+            parser_unique_var_key(class_name, subroutine->name, current_atom.value),
+            var_i, 
+            IDT_LOCAL
+        );
         var_i++;
 
         consume_atom();

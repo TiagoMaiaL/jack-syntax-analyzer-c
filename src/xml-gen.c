@@ -95,7 +95,13 @@ void write_class_var(Parser_class_var_dec var_dec, short level)
     
     LL_Node *name = var_dec.names.head;
     while (name != NULL) {
-        IDT_Entry *entry = idt_entry((char *)name->data, class_name);
+        IDT_Entry *entry = idt_entry(
+            parser_unique_var_key(
+                class_name,
+                subroutine_name,
+                (char *)name->data
+            )
+        );
         write_identifier(
             var_dec.scope == PARSER_VAR_STATIC ? "static" : "field",
             (char *)name->data, 
@@ -154,7 +160,13 @@ void write_parameter_list(LL_List params, short level)
             write_type(val.type_name, level + 1);
         }
 
-        IDT_Entry *entry = idt_entry(val.name, subroutine_name);
+        IDT_Entry *entry = idt_entry(
+            parser_unique_var_key(
+                class_name,
+                subroutine_name,
+                val.name
+            )
+        );
         write_identifier(
             "argument",
             val.name, 
@@ -207,7 +219,13 @@ void write_vars(LL_List vars, short level)
 
         LL_Node *name = val.names.head;
         while (name != NULL) {
-            IDT_Entry *entry = idt_entry((char *)name->data, subroutine_name);
+            IDT_Entry *entry = idt_entry(
+                parser_unique_var_key(
+                    class_name,
+                    subroutine_name,
+                    (char *)name->data
+                )
+            );
             write_identifier(
                 "var",
                 (char *)name->data, 
@@ -283,7 +301,13 @@ void write_let(Parser_let_statement let_stmt, short level)
     write_tag("letStatement", false, level); write_ln();
     write_keyword("let", level + 1);
 
-    IDT_Entry *entry = idt_entry(let_stmt.var_name, subroutine_name);
+    IDT_Entry *entry = idt_entry(
+        parser_unique_var_key(
+            class_name,
+            subroutine_name,
+            let_stmt.var_name
+        )
+    );
     write_identifier(
         "var",
         let_stmt.var_name, 
@@ -404,7 +428,13 @@ void write_term(Parser_term term, short level)
     }
 
     if (term.var_usage != NULL) {
-        IDT_Entry *entry = idt_entry(term.var_usage->var_name, subroutine_name);
+        IDT_Entry *entry = idt_entry(
+            parser_unique_var_key(
+                class_name,
+                subroutine_name,
+                term.var_usage->var_name
+            )
+        );
         write_identifier(
             "var",
             term.var_usage->var_name,
