@@ -115,6 +115,11 @@ static void gen_subroutine_code(Parser_subroutine_dec subroutine, Parser_class_d
         write("pop pointer 0");
     }
 
+    if (subroutine.scope == PARSER_FUNC_METHOD) {
+        write("push argument 0");
+        write("pop pointer 0");
+    }
+
     node = subroutine.statements.head;
     while (node != NULL) {
         gen_statement_code(*(Parser_statement *)node->data);

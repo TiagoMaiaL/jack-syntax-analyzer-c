@@ -299,6 +299,10 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
 {
     int var_i = 0;
 
+    if (subroutine->scope == PARSER_FUNC_METHOD) {
+        var_i++;
+    }
+
     consume_atom();
     expect(
         current_atom.symbol == TK_SYMBOL_L_PAREN,
