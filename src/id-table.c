@@ -16,6 +16,7 @@ void idt_init()
 
 void idt_store(
     const char *key, 
+    const char *class_name,
     int index, 
     IDT_Category category
 ) {
@@ -25,6 +26,7 @@ void idt_store(
     entry->category = category;
     entry->key = (char *)key;
     entry->index = index;
+    entry->class_name = (char *)class_name;
 
     ht_store(key, (void *)entry, table);
 }

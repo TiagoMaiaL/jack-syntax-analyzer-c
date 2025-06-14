@@ -168,6 +168,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, int static_i, int fiel
 
     idt_store(
         parser_unique_var_key(class->name, NULL, current_atom.value),
+        class->name,
         var_dec.scope == PARSER_VAR_STATIC ? static_i : field_i,
         var_dec.scope == PARSER_VAR_STATIC ? IDT_STATIC : IDT_FIELD
     );
@@ -194,6 +195,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, int static_i, int fiel
 
         idt_store(
             parser_unique_var_key(class->name, NULL, current_atom.value),
+            class->name,
             var_dec.scope == PARSER_VAR_STATIC ? static_i : field_i,
             var_dec.scope == PARSER_VAR_STATIC ? IDT_STATIC : IDT_FIELD
         );
@@ -319,6 +321,7 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
 
         idt_store(
             parser_unique_var_key(class_name, subroutine->name, param.name), 
+            class_name,
             var_i, 
             IDT_PARAM
         );
@@ -379,6 +382,7 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine, int var_i)
 
         idt_store(
             parser_unique_var_key(class_name, subroutine->name, current_atom.value),
+            class_name,
             var_i, 
             IDT_LOCAL
         );

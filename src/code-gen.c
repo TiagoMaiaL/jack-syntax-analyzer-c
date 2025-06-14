@@ -143,24 +143,8 @@ static void gen_statement_code(Parser_statement statement)
 
 static void gen_do_code(Parser_do_statement do_statement)
 {
-    Parser_term_subroutine_call call = do_statement.subroutine_call;
-
-    LL_Node *node = call.param_expressions.head;
-    while (node != NULL) {
-        gen_expression_code((Parser_expression *)node->data);
-        node = node->next;
-    }
-
-    char call_command[STR_BUFF_SIZE];
-    sprintf(
-        call_command,
-        "call %s.%s %d",
-        call.instance_var_name, // TODO: get class name from instance.
-        call.subroutine_name,
-        call.param_expressions.count
-    );
-
-    write(call_command);
+    gen_subroutine_call_code(do_statement.subroutine_call);
+    // TODO: Determine if we'll use the returned value or pop to temp 0.
 }
 
 static void gen_let_code(Parser_let_statement let_statement)
@@ -353,7 +337,7 @@ static void gen_keyword_code(Parser_term_keyword_constant keyword)
         write("push constant 0");
 
     } else if (keyword == PARSER_TERM_KEYWORD_THIS) {
-        // TODO: 
+        write("push pointer 0");
 
     } else if (keyword == PARSER_TERM_KEYWORD_NULL) {
         write("push constant 0");
@@ -387,15 +371,41 @@ static void gen_subroutine_call_code(Parser_term_subroutine_call call)
         expression_node = expression_node->next;
     }
 
+    char *func_class_name = NULL;
+    IDT_Entry *var = NULL;
     char call_command[STR_BUFF_SIZE];
+
+    if (call.instance_var_name == NULL) {
+        func_class_name = class_name;
+    } else {
+        var = search_var(
+            class_name, 
+            subroutine_name, 
+            call.instance_var_name
+        );
+
+        if (var != NULL) {
+            sprintf(
+                call_command,
+                "push %s %d",
+                idt_category_name(var->category),
+                var->index
+            );
+            write(call_command);
+
+            func_class_name = var->class_name;
+        } else {
+            func_class_name = call.instance_var_name;
+        }
+    }
+
     sprintf(
         call_command,
         "call %s.%s %d",
-        call.instance_var_name, // TODO: get class name from instance.
+        func_class_name,
         call.subroutine_name,
         call.param_expressions.count
     );
-
     write(call_command);
 }
 
