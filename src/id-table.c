@@ -14,7 +14,7 @@ void idt_init()
     }
 }
 
-void idt_store(
+void idt_store_var(
     const char *key, 
     const char *class_name,
     int index, 
@@ -23,10 +23,27 @@ void idt_store(
     idt_init();
 
     IDT_Entry *entry = malloc(sizeof(IDT_Entry));
-    entry->category = category;
-    entry->key = (char *)key;
-    entry->index = index;
-    entry->class_name = (char *)class_name;
+    IDT_Var_Entry *var = malloc(sizeof(IDT_Var_Entry));
+    var->category = category;
+    var->key = (char *)key;
+    var->index = index;
+    var->class_name = (char *)class_name;
+    entry->var = var;
+
+    ht_store(key, (void *)entry, table);
+}
+
+void idt_store_subroutine(
+    const char *key,
+    const bool is_void
+) {
+    idt_init();
+
+    IDT_Entry *entry = malloc(sizeof(IDT_Entry));
+    IDT_Subroutine_Entry *subroutine = malloc(sizeof(IDT_Subroutine_Entry));
+    subroutine->key = (char *)key;
+    subroutine->is_void = (bool)is_void;
+    entry->subroutine = subroutine;
 
     ht_store(key, (void *)entry, table);
 }

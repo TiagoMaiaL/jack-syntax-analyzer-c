@@ -106,8 +106,8 @@ void write_class_var(Parser_class_var_dec var_dec, short level)
             var_dec.scope == PARSER_VAR_STATIC ? "static" : "field",
             (char *)name->data, 
             false,
-            entry->category,
-            entry->index,
+            entry->var->category,
+            entry->var->index,
             level + 1
         );
 
@@ -171,8 +171,8 @@ void write_parameter_list(LL_List params, short level)
             "argument",
             val.name, 
             false,
-            entry->category,
-            entry->index,
+            entry->var->category,
+            entry->var->index,
             level + 1
         );
         
@@ -230,8 +230,8 @@ void write_vars(LL_List vars, short level)
                 "var",
                 (char *)name->data, 
                 false,
-                entry->category,
-                entry->index,
+                entry->var->category,
+                entry->var->index,
                 level + 1
             );
 
@@ -312,8 +312,8 @@ void write_let(Parser_let_statement let_stmt, short level)
         "var",
         let_stmt.var_name, 
         true,
-        entry->category,
-        entry->index,
+        entry->var->category,
+        entry->var->index,
         level + 1
     );
 
@@ -439,8 +439,8 @@ void write_term(Parser_term term, short level)
             "var",
             term.var_usage->var_name,
             true,
-            entry == NULL ? -1 : entry->category,
-            entry == NULL ? -1 : entry->index,
+            entry == NULL ? -1 : entry->var->category,
+            entry == NULL ? -1 : entry->var->index,
             level + 1
         );
 

@@ -166,8 +166,8 @@ static void gen_let_code(Parser_let_statement let_statement)
         sprintf(
             pop_command,
             "pop %s %d",
-            idt_category_name(entry->category),
-            entry->index
+            idt_category_name(entry->var->category),
+            entry->var->index
         );
         write(pop_command);
     }
@@ -322,6 +322,7 @@ static void gen_term_code(Parser_term *term)
 
     } else if (term->subroutine_call != NULL) {
         gen_subroutine_call_code(*term->subroutine_call);
+        // TODO: Determine if we'll use the returned value or pop to temp 0.
 
     } else if (term->parenthesized_expression != NULL) {
         gen_expression_code(term->parenthesized_expression);
@@ -361,8 +362,8 @@ static void gen_var_usage_code(Parser_term_var_usage *var_usage)
         sprintf(
             push_command,
             "push %s %d",
-            idt_category_name(entry->category),
-            entry->index
+            idt_category_name(entry->var->category),
+            entry->var->index
         );
         write(push_command);
     }
@@ -377,28 +378,28 @@ static void gen_subroutine_call_code(Parser_term_subroutine_call call)
     }
 
     char *func_class_name = NULL;
-    IDT_Entry *var = NULL;
+    IDT_Entry *entry = NULL;
     char call_command[STR_BUFF_SIZE];
 
     if (call.instance_var_name == NULL) {
         func_class_name = class_name;
     } else {
-        var = search_var(
+        entry = search_var(
             class_name, 
             subroutine_name, 
             call.instance_var_name
         );
 
-        if (var != NULL) {
+        if (entry != NULL && entry->var != NULL) {
             sprintf(
                 call_command,
                 "push %s %d",
-                idt_category_name(var->category),
-                var->index
+                idt_category_name(entry->var->category),
+                entry->var->index
             );
             write(call_command);
 
-            func_class_name = var->class_name;
+            func_class_name = entry->var->class_name;
         } else {
             func_class_name = call.instance_var_name;
         }

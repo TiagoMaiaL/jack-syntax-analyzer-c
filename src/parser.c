@@ -166,7 +166,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, int static_i, int fiel
     name_node->data = (void *)current_atom.value;
     ll_append(name_node, &var_dec.names);
 
-    idt_store(
+    idt_store_var(
         parser_unique_var_key(class->name, NULL, current_atom.value),
         class->name,
         var_dec.scope == PARSER_VAR_STATIC ? static_i : field_i,
@@ -193,7 +193,7 @@ static void parse_class_vars_dec(Parser_class_dec *class, int static_i, int fiel
         name_node->data = (void *)current_atom.value;
         ll_append(name_node, &var_dec.names);
 
-        idt_store(
+        idt_store_var(
             parser_unique_var_key(class->name, NULL, current_atom.value),
             class->name,
             var_dec.scope == PARSER_VAR_STATIC ? static_i : field_i,
@@ -323,7 +323,7 @@ static void parse_params_list(Parser_subroutine_dec *subroutine)
         );
         param.name = current_atom.value;
 
-        idt_store(
+        idt_store_var(
             parser_unique_var_key(class_name, subroutine->name, param.name), 
             class_name,
             var_i, 
@@ -384,7 +384,7 @@ static void parse_var_decs(Parser_subroutine_dec *subroutine, int var_i)
         name_node->data = (void *)current_atom.value;
         ll_append(name_node, &var.names);
 
-        idt_store(
+        idt_store_var(
             parser_unique_var_key(class_name, subroutine->name, current_atom.value),
             class_name,
             var_i, 
