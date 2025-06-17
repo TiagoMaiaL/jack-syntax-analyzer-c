@@ -149,7 +149,7 @@ static void gen_statement_code(Parser_statement statement)
 static void gen_do_code(Parser_do_statement do_statement)
 {
     gen_subroutine_call_code(do_statement.subroutine_call);
-    // TODO: Determine if we'll use the returned value or pop to temp 0.
+    write("pop temp 0");
 }
 
 static void gen_let_code(Parser_let_statement let_statement)
@@ -269,12 +269,16 @@ static void gen_while_code(Parser_while_statement while_statement)
 
 static void gen_return_code(Parser_return_statement return_statement)
 {
-    if (return_statement.has_expr) {
-        gen_expression_code(&return_statement.expression);
-    }
     if (subroutine_dec.scope == PARSER_FUNC_CONSTRUCTOR) {
         write("push pointer 0");
+
+    } else if (return_statement.has_expr) {
+        gen_expression_code(&return_statement.expression);
+
+    } else {
+        write("push constant 0");
     }
+
     write("return");
 }
 
@@ -322,7 +326,6 @@ static void gen_term_code(Parser_term *term)
 
     } else if (term->subroutine_call != NULL) {
         gen_subroutine_call_code(*term->subroutine_call);
-        // TODO: Determine if we'll use the returned value or pop to temp 0.
 
     } else if (term->parenthesized_expression != NULL) {
         gen_expression_code(term->parenthesized_expression);
@@ -378,10 +381,12 @@ static void gen_subroutine_call_code(Parser_term_subroutine_call call)
     }
 
     char *func_class_name = NULL;
+    short params_count = call.param_expressions.count;
     IDT_Entry *entry = NULL;
     char call_command[STR_BUFF_SIZE];
 
     if (call.instance_var_name == NULL) {
+        // TODO: Determine how to call methods in this (if it should push the pointer)
         func_class_name = class_name;
     } else {
         entry = search_var(
@@ -400,6 +405,7 @@ static void gen_subroutine_call_code(Parser_term_subroutine_call call)
             write(call_command);
 
             func_class_name = entry->var->class_name;
+            params_count++;
         } else {
             func_class_name = call.instance_var_name;
         }
@@ -410,7 +416,7 @@ static void gen_subroutine_call_code(Parser_term_subroutine_call call)
         "call %s.%s %d",
         func_class_name,
         call.subroutine_name,
-        call.param_expressions.count
+        params_count
     );
     write(call_command);
 }
