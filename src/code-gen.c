@@ -44,6 +44,10 @@ void cg_gen_code(FILE *file, Parser_jack_syntax *ast)
     
     Parser_class_dec class = ast->class_dec;
 
+    char comment[STR_BUFF_SIZE];
+    sprintf(comment, "// compiled %s.jack", class_name);
+    write(comment);
+
     if (class.subroutines.head == NULL) {
         return;
     }

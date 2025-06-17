@@ -7,7 +7,7 @@
 
 #define SUCCESS_CODE    0
 #define ERROR_CODE      -1
-#define ARGS_NUM        2
+#define ARGS_NUM        3
 
 static FILE *jack_file_handle       = NULL;
 static FILE *code_file_handle       = NULL;
@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 {
     if (argc < ARGS_NUM) {
         printf("Invalid project folder argument\n");
-        printf("Usage: JackAnalyzer jack_proj_path\n");
+        printf("Usage: JackAnalyzer jack_proj_path vm_output_file_path\n");
         return ERROR_CODE;
     }
 
@@ -30,6 +30,10 @@ int main(int argc, char **argv)
         return ERROR_CODE;
     }
 
+    if (create_output_file(argv[2]) == ERROR_CODE) {
+        return ERROR_CODE;
+    }
+
     for (int i = 0; i < proj.jack_files_count; i++) {
         char *file_path = proj.jack_files_paths[i];
 
@@ -37,18 +41,14 @@ int main(int argc, char **argv)
             return ERROR_CODE;
         }
 
-        if (create_output_file(file_path) == ERROR_CODE) {
-            return ERROR_CODE;
-        }
-            
         Parser_jack_syntax file_syntax = parser_parse(jack_file_handle);
         cg_gen_code(code_file_handle, &file_syntax);
         parser_free(file_syntax);
 
         fh_close_file(jack_file_handle);
-        fh_close_file(code_file_handle);
     }
 
+    fh_close_file(code_file_handle);
     fh_close_proj(&proj);
     
     return SUCCESS_CODE;
@@ -71,28 +71,6 @@ static int open_jack_file(const char *path)
 
 static int create_output_file(char *path)
 {
-    bool did_rename = false;
-    char *ext = ".jack";
-    char *i_path = path;
-    char ch;
-    
-    while ((ch = *i_path) != '\0') {
-        if (strcmp(i_path, ext) == 0) {
-            i_path[0] = '.';
-            i_path[1] = 'v';
-            i_path[2] = 'm';
-            i_path[3] = '\0';
-            did_rename = true;
-            break;
-        }
-        i_path += 1;
-    }
-
-    if (!did_rename) {
-        printf("Unable to create code path for %s\n", path);
-        return ERROR_CODE;
-    }
-
     code_file_handle = fh_open_file(path, true);
 
     if (code_file_handle == NULL) {

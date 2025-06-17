@@ -4,6 +4,7 @@
 
 typedef struct {
     DIR *handle;
+    char *folder_name;
     int jack_files_count;
     char **jack_files_paths;
     bool failed;
