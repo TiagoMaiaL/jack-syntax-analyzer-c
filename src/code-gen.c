@@ -386,8 +386,9 @@ static void gen_subroutine_call_code(Parser_term_subroutine_call call)
     char call_command[STR_BUFF_SIZE];
 
     if (call.instance_var_name == NULL) {
-        // TODO: Determine how to call methods in this (if it should push the pointer)
+        write("push pointer 0");
         func_class_name = class_name;
+        params_count++;
     } else {
         entry = search_var(
             class_name, 
@@ -526,7 +527,7 @@ static void write(const char *str)
 {
     if (indent_level > 0) {
         for (short i = 0; i < indent_level; i++) {
-            fh_write("  ", code_file);
+            fh_write("    ", code_file);
         }
     }
 
