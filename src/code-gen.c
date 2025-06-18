@@ -1,3 +1,4 @@
+#include <string.h>
 #include "code-gen.h"
 #include "file-handler.h"
 #include "id-table.h"
@@ -23,6 +24,7 @@ static void gen_return_code(Parser_return_statement return_statement);
 
 static void gen_expression_code(Parser_expression *expr);
 static void gen_term_code(Parser_term *term);
+static void gen_string_code(char *str);
 static void gen_keyword_code(Parser_term_keyword_constant keyword);
 static void gen_var_usage_code(Parser_term_var_usage *var_usage);
 static void gen_subroutine_call_code(Parser_term_subroutine_call call);
@@ -320,7 +322,7 @@ static void gen_term_code(Parser_term *term)
         write(const_push);
 
     } else if (term->string != NULL) {
-        // TODO: determine how to handle strings.
+        gen_string_code(term->string);
 
     } else if (term->keyword_value != PARSER_TERM_KEYWORD_UNDEFINED) {
         gen_keyword_code(term->keyword_value);
@@ -337,6 +339,28 @@ static void gen_term_code(Parser_term *term)
     } else if (term->sub_term != NULL) {
         gen_term_code(&term->sub_term->term);
         gen_unary_operator_code(term->sub_term->unary_op);
+    }
+}
+
+static void gen_string_code(char *str)
+{
+    short len = strlen(str);
+    short i;
+    char command[STR_BUFF_SIZE];
+
+    if (len == 2) { // "" (empty literal)
+        return;
+    }
+
+    sprintf(command, "push constant %d", len);
+    write(command);
+    write("call String.new 1");
+
+    for (i = 1; i < len - 1; i++) {
+        char c = str[i];
+        sprintf(command, "push constant %d", (short)c);
+        write(command);
+        write("call String.appendChar 2");
     }
 }
 
