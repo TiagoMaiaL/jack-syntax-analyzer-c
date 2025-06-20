@@ -368,7 +368,7 @@ static void gen_string_code(char *str)
         return;
     }
 
-    sprintf(command, "push constant %d", len);
+    sprintf(command, "push constant %d", len - 2);
     write(command);
     write("call String.new 1");
 
@@ -417,7 +417,7 @@ static void gen_var_usage_code(Parser_term_var_usage *var_usage)
         if (var_usage->subscript != NULL) {
             gen_expression_code(var_usage->subscript);
             write("add");
-            write("pop ponter 1");
+            write("pop pointer 1");
             write("push that 0");
         }
     }
