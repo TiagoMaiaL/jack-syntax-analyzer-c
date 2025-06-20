@@ -28,6 +28,7 @@ static void gen_string_code(char *str);
 static void gen_keyword_code(Parser_term_keyword_constant keyword);
 static void gen_var_usage_code(Parser_term_var_usage *var_usage);
 static void gen_subroutine_call_code(Parser_term_subroutine_call call);
+static void gen_sub_term_code(Parser_sub_term *sub_term);
 static void gen_operator_code(Parser_term_operator operator);
 static void gen_unary_operator_code(Parser_term_operator operator);
 
@@ -353,8 +354,7 @@ static void gen_term_code(Parser_term *term)
         gen_expression_code(term->parenthesized_expression);
 
     } else if (term->sub_term != NULL) {
-        gen_term_code(&term->sub_term->term);
-        gen_unary_operator_code(term->sub_term->unary_op);
+        gen_sub_term_code(term->sub_term);
     }
 }
 
@@ -425,12 +425,6 @@ static void gen_var_usage_code(Parser_term_var_usage *var_usage)
 
 static void gen_subroutine_call_code(Parser_term_subroutine_call call)
 {
-    LL_Node *expression_node = call.param_expressions.head;
-    while (expression_node != NULL) {
-        gen_expression_code((Parser_expression *)expression_node->data);
-        expression_node = expression_node->next;
-    }
-
     char *func_class_name = NULL;
     short params_count = call.param_expressions.count;
     IDT_Entry *entry = NULL;
@@ -463,6 +457,12 @@ static void gen_subroutine_call_code(Parser_term_subroutine_call call)
         }
     }
 
+    LL_Node *expression_node = call.param_expressions.head;
+    while (expression_node != NULL) {
+        gen_expression_code((Parser_expression *)expression_node->data);
+        expression_node = expression_node->next;
+    }
+
     sprintf(
         call_command,
         "call %s.%s %d",
@@ -471,6 +471,12 @@ static void gen_subroutine_call_code(Parser_term_subroutine_call call)
         params_count
     );
     write(call_command);
+}
+
+static void gen_sub_term_code(Parser_sub_term *sub_term)
+{
+    gen_term_code(&sub_term->term);
+    gen_unary_operator_code(sub_term->unary_op);
 }
 
 static void gen_operator_code(Parser_term_operator operator)
