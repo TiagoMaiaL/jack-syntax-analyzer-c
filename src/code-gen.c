@@ -168,14 +168,30 @@ static void gen_let_code(Parser_let_statement let_statement)
         let_statement.var_name
     );
     if (entry != NULL) {
-        char pop_command[STR_BUFF_SIZE];
-        sprintf(
-            pop_command,
-            "pop %s %d",
-            idt_category_name(entry->var->category),
-            entry->var->index
-        );
-        write(pop_command);
+        char command[STR_BUFF_SIZE];
+
+        if (let_statement.has_subscript) {
+            sprintf(
+                command, 
+                "push %s %d", 
+                idt_category_name(entry->var->category), 
+                entry->var->index
+            );
+            write(command);
+            gen_expression_code(&let_statement.subscript);
+            write("add");
+            write("pop pointer 1");
+            write("pop that 0");
+
+        } else {
+            sprintf(
+                command,
+                "pop %s %d",
+                idt_category_name(entry->var->category),
+                entry->var->index
+            );
+            write(command);
+        }
     }
 }
 
@@ -397,6 +413,13 @@ static void gen_var_usage_code(Parser_term_var_usage *var_usage)
             entry->var->index
         );
         write(push_command);
+
+        if (var_usage->subscript != NULL) {
+            gen_expression_code(var_usage->subscript);
+            write("add");
+            write("pop ponter 1");
+            write("push that 0");
+        }
     }
 }
 
