@@ -400,7 +400,7 @@ static Tokenizer_keyword get_keyword(char **val_ref)
     for (int i = 0; i < keyword_len; i++) {
         keyword_value[i] = get_char();
     }
-    keyword_value[keyword_len + 1] = '\0';
+    keyword_value[keyword_len] = '\0';
 
     *val_ref = keyword_value;
 
@@ -468,7 +468,7 @@ static char *get_identifier()
     for (int i = 0; i < len; i++) {
         value[i] = get_char();
     }
-    value[len + 1] = '\0';
+    value[len] = '\0';
 
     return value;
 }
